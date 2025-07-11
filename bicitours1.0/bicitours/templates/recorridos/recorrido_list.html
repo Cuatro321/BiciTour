@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Recorridos Próximos</h2>
+  <ul>
+    {% for recorrido in recorridos %}
+      <li>
+        <a href="#">{{ recorrido.ciudad }} — {{ recorrido.fecha }}</a>
+        ({{ recorrido.km }} km, ${{ recorrido.costo }})
+      </li>
+    {% empty %}
+      <li>No hay recorridos disponibles.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}
