@@ -1,6 +1,11 @@
 from django.db import models
 from recorridos.models import Recorrido
 
+<<<<<<< HEAD
+=======
+"""
+
+>>>>>>> 0f73c11f9eb71601245e21e94b95bb3e242cd977
 class Inscripcion(models.Model):
     recorrido = models.ForeignKey(
         Recorrido,
