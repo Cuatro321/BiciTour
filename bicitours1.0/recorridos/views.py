@@ -21,7 +21,7 @@ class RecorridoDetailView(DetailView):
     context_object_name = 'recorrido'
 
     def get_context_data(self, **kwargs):
-        ctx = super().get_context_data( **kwargs)
+        ctx = super().get_context_data(**kwargs)
         # Trae sólo las inscripciones de este recorrido
         ctx['inscritos'] = Inscripcion.objects.filter(recorrido=self.object)
         return ctx
