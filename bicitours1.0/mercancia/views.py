@@ -1,4 +1,4 @@
-from django.views.generic import LisView, DetailView
+from django.views.generic import ListView, DetailView
 from .models import Producto
 
 class ProductoLisView(ListView):
