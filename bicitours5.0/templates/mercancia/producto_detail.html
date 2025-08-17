@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h2>{{ object.nombre }}</h2>
+  <p>{{ object.descripcion }}</p>
+  <p><strong>Precio:</strong> ${{ object.precio }}</p>
+  <p><strong>Stock:</strong> {{ object.stock }}</p>
+  {% if object.imagen %}
+    <img src="{{ object.imagen.url }}" alt="{{ object.nombre }}" width="300">
+  {% endif %}
+  <a href="{% url 'mercancia:lista' %}">Volver al catálogo</a>
+{% endblock %}

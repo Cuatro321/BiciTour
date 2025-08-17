@@ -1,0 +1,205 @@
+{% extends "comunidad/base_comunidad.html" %}
+
+{% block comunidad_content %}
+{% if user.is_authenticated %}
+<div class="action-buttons">
+    <a href="{% url 'comunidad:lista_publicaciones' %}" class="btn-back">
+        <span class="icon-arrow">↩</span> Volver a Publicaciones
+    </a>
+    <a href="{% url 'comunidad:nueva_publicacion' %}" class="btn-new-post">
+        <span class="icon-plus"></span> Crear Nueva Publicación
+    </a>
+</div>
+{% else %}
+<div class="action-buttons">
+    <a href="{% url 'comunidad:lista_publicaciones' %}" class="btn-back">
+        <span class="icon-arrow">↩</span> Volver a Publicaciones
+    </a>
+</div>
+{% endif %}
+
+<div class="publicacion-card">
+    <div class="publicacion-header">
+        {% if publicacion.usuario.perfil.foto %}
+        <img src="{{ publicacion.usuario.perfil.foto.url }}" alt="{{ publicacion.usuario.username }}" class="user-avatar">
+        {% endif %}
+        <div class="user-info">
+            <span class="publicacion-user">{{ publicacion.usuario.username }}</span>
+            <span class="publicacion-date">{{ publicacion.fecha_publicacion|date:"d M Y, H:i" }}</span>
+        </div>
+        
+        {% if publicacion.usuario == user or user.is_staff %}
+        <form action="{% url 'comunidad:eliminar_publicacion' publicacion.pk %}" method="post" class="delete-form">
+            {% csrf_token %}
+            <button type="submit" class="delete-publicacion"></button>
+        </form>
+        {% endif %}
+    </div>
+    
+    <div class="publicacion-body">
+        <h2 class="publicacion-title">{{ publicacion.titulo }}</h2>
+        
+        <a href="{% url 'recorridos:detalle' publicacion.recorrido.pk %}" class="publicacion-receta">
+          Recorrido: {{ publicacion.recorrido.ciudad }}
+        </a>
+        
+        <p class="publicacion-content">{{ publicacion.contenido }}</p>
+        
+        {% if publicacion.fotos.exists %}
+        <div class="publicacion-fotos">
+            {% for foto in publicacion.fotos.all %}
+            <div class="foto-container">
+                <img src="{{ foto.imagen.url }}" alt="{{ foto.descripcion }}" class="publicacion-foto">
+                {% if foto.descripcion %}
+                <p class="foto-descripcion">{{ foto.descripcion }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="publicacion-actions">
+        <form action="{% url 'comunidad:like_publicacion' publicacion.pk %}" method="post" class="like-form">
+            {% csrf_token %}
+            <button type="submit" class="like-btn {% if user in publicacion.likes.all %}liked{% endif %}">
+                ❤️ <span class="like-count">{{ publicacion.likes.count }}</span>
+            </button>
+        </form>
+        
+        <a href="#comentarios" class="comment-btn">
+            💬 <span class="comment-count">{{ publicacion.comentarios.count }}</span>
+        </a>
+    </div>
+</div>
+
+<div id="comentarios" class="comentarios-section">
+    <h3 class="section-title">Comentarios ({{ publicacion.comentarios.count }})</h3>
+    
+    {% for comentario in publicacion.comentarios.all %}
+    <div class="comentario">
+        <div class="comentario-header">
+            {% if comentario.usuario.perfil.foto %}
+            <img src="{{ comentario.usuario.perfil.foto.url }}" alt="{{ comentario.usuario.username }}" class="user-avatar">
+            {% endif %}
+            <div class="user-info">
+                <span class="comentario-user">{{ comentario.usuario.username }}</span>
+                <span class="comentario-date">{{ comentario.fecha_comentario|date:"d M Y, H:i" }}</span>
+            </div>
+            
+            {% if comentario.usuario == user or user.is_staff %}
+            <form action="{% url 'comunidad:eliminar_comentario' comentario.pk %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="delete-comment"></button>
+            </form>
+            {% endif %}
+        </div>
+        <p class="comentario-content">{{ comentario.contenido }}</p>
+    </div>
+    {% empty %}
+    <p style="text-align: center; color: #888;">No hay comentarios aún. ¡Sé el primero en comentar!</p>
+    {% endfor %}
+    
+    {% if user.is_authenticated %}
+    <form method="post" action="{% url 'comunidad:agregar_comentario' publicacion.pk %}" class="form-comentario">
+        {% csrf_token %}
+        <div class="comment-input-wrapper">
+            {% if user.perfil.foto %}
+            <img src="{{ user.perfil.foto.url }}" alt="{{ user.username }}" class="user-avatar">
+            {% endif %}
+            <div class="comment-input-container">
+                <textarea name="contenido" class="textarea-comentario" placeholder="Escribe tu comentario..." required></textarea>
+                <button type="submit" class="btn-submit">Publicar comentario</button>
+            </div>
+        </div>
+    </form>
+    {% else %}
+    <div class="login-prompt">
+        <a href="{% url 'login' %}?next={% url 'comunidad:detalle_publicacion' publicacion.pk %}" class="login-link">Inicia sesión</a> para dejar un comentario.
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    /* Estilos para fotos de perfil */
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-right: 10px;
+    }
+
+    /* Encabezados mejor alineados */
+    .publicacion-header,
+    .comentario-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .user-info {
+        flex-grow: 1;
+    }
+
+    /* Formulario de comentario mejorado */
+    .form-comentario {
+        margin-top: 20px;
+    }
+
+    .comment-input-wrapper {
+        display: flex;
+        gap: 10px;
+    }
+
+    .comment-input-container {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .textarea-comentario {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        min-height: 80px;
+        resize: vertical;
+        font-family: inherit;
+    }
+
+    .btn-submit {
+        align-self: flex-end;
+        background-color: #01a699;
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .btn-submit:hover {
+        background-color: #018575;
+    }
+
+    /* Botones de eliminar */
+    .delete-publicacion,
+    .delete-comment {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        color: #dc3545;
+        padding: 0;
+        margin-left: 10px;
+    }
+
+    /* Contenido de comentarios */
+    .comentario-content {
+        margin-left: 50px;
+        padding: 5px 0;
+    }
+</style>
+{% endblock %}

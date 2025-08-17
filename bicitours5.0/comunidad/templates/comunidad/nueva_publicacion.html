@@ -1,0 +1,504 @@
+{% extends "comunidad/base_comunidad.html" %}
+
+{% block comunidad_content %}
+<div class="form-header">
+    <a href="{% url 'comunidad:lista_publicaciones' %}" class="btn-back">
+        <span class="icon-arrow">↩</span> Volver a Publicaciones
+    </a>
+    <h2 class="form-title">Nueva Publicación</h2>
+</div>
+
+<div class="form-container">
+    <form method="post" enctype="multipart/form-data" id="publicacion-form">
+        {% csrf_token %}
+        
+        <!-- Sección de información básica -->
+        <div class="form-section">
+            <h3 class="section-title">Información básica</h3>
+            
+            <div class="form-group">
+                <label class="form-label" for="{{ publicacion_form.recorrido.id_for_label }}">Recorrido relacionado</label>
+                {{ publicacion_form.recorrido }}
+                <small class="form-hint">Selecciona el recorrido al que hace referencia tu publicación</small>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="{{ publicacion_form.titulo.id_for_label }}">Título</label>
+                {{ publicacion_form.titulo }}
+                <small class="form-hint">Un título llamativo que resuma tu experiencia</small>
+            </div>
+        </div>
+        
+        <!-- Sección de descripción principal -->
+        <div class="form-section">
+            <h3 class="section-title">Tu experiencia</h3>
+            
+            <div class="form-group">
+                <label class="form-label" for="{{ publicacion_form.contenido.id_for_label }}">Descripción principal</label>
+                {{ publicacion_form.contenido }}
+                <small class="form-hint">Describe tu experiencia en este recorrido (dificultad, paisajes, recomendaciones)</small>
+            </div>
+        </div>
+        
+        <!-- Sección de fotos -->
+        <div class="form-section">
+            <h3 class="section-title">Fotos del recorrido <span class="badge">Opcional</span></h3>
+            
+            <div class="file-upload-container">
+                <div class="upload-area" id="upload-area">
+                    <div class="upload-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"></path>
+                            <line x1="16" y1="5" x2="22" y2="5"></line>
+                            <line x1="19" y1="2" x2="19" y2="8"></line>
+                            <circle cx="9" cy="9" r="2"></circle>
+                            <path d="M21 15l-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
+                        </svg>
+                    </div>
+                    <div class="upload-text">
+                        <p><strong>Haz clic para seleccionar fotos</strong></p>
+                        <p class="hint-text">Puedes seleccionar múltiples imágenes (máx. 10)</p>
+                        <p class="file-counter" id="file-counter">0 fotos seleccionadas</p>
+                    </div>
+                    <input type="file" name="imagen" id="id_imagen" multiple accept="image/*" class="file-input">
+                </div>
+                
+                <div class="gallery-preview" id="gallery-preview">
+                    <!-- Las miniaturas de las imágenes aparecerán aquí -->
+                </div>
+            </div>
+        </div>
+                
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">
+                <span class="icon-publish">📢</span> Publicar con <span id="photo-count">0</span> fotos
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+    /* Estilos base */
+    :root {
+        --primary: #01a699;
+        --primary-hover: #018577;
+        --secondary: #6c757d;
+        --light: #f8f9fa;
+        --border: #dee2e6;
+        --text: #495057;
+        --text-light: #6c757d;
+        --danger: #dc3545;
+        --success: #28a745;
+    }
+    
+    .form-header {
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    
+    .btn-back {
+        display: inline-flex;
+        align-items: center;
+
+        text-decoration: none;
+        margin-bottom: 1rem;
+        font-weight: 500;
+        transition: color 0.3s;
+    }
+    
+    .btn-back:hover {
+        color: var(--primary-hover);
+    }
+    
+    .form-title {
+        font-size: 1.8rem;
+        color: #333;
+        margin-bottom: 0.5rem;
+        font-weight: 700;
+    }
+    
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+    
+    /* Secciones del formulario */
+    .form-section {
+        margin-bottom: 2.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .form-section:last-child {
+        border-bottom: none;
+        margin-bottom: 1.5rem;
+    }
+    
+    .section-title {
+        font-size: 1.3rem;
+        color: var(--primary);
+        margin-bottom: 1.2rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid rgba(1, 166, 153, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+    }
+    
+    .badge {
+        background-color: var(--light);
+        color: var(--text-light);
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 50px;
+        font-weight: 500;
+    }
+    
+    /* Grupos de formulario */
+    .form-group {
+        margin-bottom: 1.8rem;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 0.6rem;
+        font-weight: 600;
+        color: var(--text);
+        font-size: 0.95rem;
+    }
+    
+    .form-hint {
+        display: block;
+        margin-top: 0.5rem;
+        font-size: 0.85rem;
+        color: var(--text-light);
+        line-height: 1.4;
+    }
+    
+    /* Campos de formulario */
+    select, input, textarea {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+    
+    select:focus, input:focus, textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(1, 166, 153, 0.2);
+    }
+    
+    .form-textarea {
+        min-height: 120px;
+        resize: vertical;
+    }
+    
+    /* Área de subida mejorada */
+    .file-upload-container {
+        margin-top: 1.5rem;
+    }
+    
+    .upload-area {
+        border: 2px dashed var(--primary);
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        background-color: rgba(1, 166, 153, 0.05);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 200px;
+        position: relative;
+    }
+    
+    .upload-area:hover {
+        background-color: rgba(1, 166, 153, 0.1);
+        border-color: var(--primary-hover);
+    }
+    
+    .upload-area.highlight {
+        background-color: rgba(1, 166, 153, 0.15);
+        border-color: var(--primary-hover);
+    }
+    
+    .upload-icon {
+        margin-bottom: 1rem;
+        color: var(--primary);
+    }
+    
+    .upload-icon svg {
+        stroke-width: 1.5;
+    }
+    
+    .upload-text p {
+        margin: 0.3rem 0;
+        color: var(--text);
+    }
+    
+    .upload-text p strong {
+        color: var(--primary);
+    }
+    
+    .hint-text {
+        font-size: 0.9rem;
+        color: var(--text-light);
+    }
+    
+    .file-counter {
+        font-size: 0.85rem;
+        color: var(--success);
+        font-weight: 600;
+        margin-top: 0.5rem;
+    }
+    
+    .file-input {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        opacity: 0;
+        cursor: pointer;
+    }
+    
+    /* Galería de previsualización */
+    .gallery-preview {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    
+    .thumbnail {
+        width: 120px;
+        height: 120px;
+        border-radius: 8px;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .thumbnail:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .thumbnail img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .remove-thumbnail {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: rgba(220, 53, 69, 0.9);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background 0.2s;
+    }
+    
+    .remove-thumbnail:hover {
+        background: var(--danger);
+    }
+    
+    /* Botón de enviar */
+    .form-actions {
+        margin-top: 2rem;
+        text-align: center;
+    }
+    
+    .btn-primary {
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        padding: 0.9rem 2rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.7rem;
+        transition: all 0.3s;
+        font-size: 1.05rem;
+        box-shadow: 0 2px 10px rgba(1, 166, 153, 0.3);
+    }
+    
+    .btn-primary:hover {
+        background-color: var(--primary-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(1, 166, 153, 0.4);
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .form-container {
+            padding: 1.5rem;
+        }
+        
+        .upload-area {
+            padding: 1.5rem;
+            min-height: 180px;
+        }
+        
+        .thumbnail {
+            width: 100px;
+            height: 100px;
+        }
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadArea = document.getElementById('upload-area');
+    const fileInput = document.getElementById('id_imagen');
+    const galleryPreview = document.getElementById('gallery-preview');
+    const fileCounter = document.getElementById('file-counter');
+    const photoCount = document.getElementById('photo-count');
+    let files = [];
+    const MAX_FILES = 10;
+    
+    // Manejar clic en el área de subida
+    uploadArea.addEventListener('click', function(e) {
+        if (e.target !== fileInput) {
+            fileInput.click();
+        }
+    });
+    
+    // Manejar cambio en el input de archivos
+    fileInput.addEventListener('change', function(e) {
+        if (e.target.files.length > MAX_FILES) {
+            alert(`Solo puedes subir un máximo de ${MAX_FILES} fotos`);
+            return;
+        }
+        files = Array.from(e.target.files);
+        updateFileCounter();
+        renderThumbnails();
+    });
+    
+    // Manejar arrastrar y soltar
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    ['dragenter', 'dragover'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, highlight, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, unhighlight, false);
+    });
+    
+    function highlight() {
+        uploadArea.classList.add('highlight');
+    }
+    
+    function unhighlight() {
+        uploadArea.classList.remove('highlight');
+    }
+    
+    uploadArea.addEventListener('drop', function(e) {
+        const dt = e.dataTransfer;
+        const droppedFiles = Array.from(dt.files);
+        
+        if (droppedFiles.length > MAX_FILES) {
+            alert(`Solo puedes subir un máximo de ${MAX_FILES} fotos`);
+            return;
+        }
+        
+        files = droppedFiles;
+        fileInput.files = dt.files;
+        updateFileCounter();
+        renderThumbnails();
+    });
+    
+    // Actualizar contador de archivos
+    function updateFileCounter() {
+        const count = files.length;
+        fileCounter.textContent = count + (count === 1 ? ' foto seleccionada' : ' fotos seleccionadas');
+        photoCount.textContent = count;
+        
+        if (count >= MAX_FILES) {
+            fileCounter.style.color = 'var(--danger)';
+        } else {
+            fileCounter.style.color = 'var(--success)';
+        }
+    }
+    
+    // Mostrar miniaturas de las imágenes
+    function renderThumbnails() {
+        galleryPreview.innerHTML = '';
+        
+        if (files.length > 0) {
+            files.forEach((file, index) => {
+                if (!file.type.match('image.*')) return;
+                
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const thumbnail = document.createElement('div');
+                    thumbnail.className = 'thumbnail';
+                    
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.alt = 'Previsualización';
+                    
+                    const removeBtn = document.createElement('button');
+                    removeBtn.className = 'remove-thumbnail';
+                    removeBtn.innerHTML = '×';
+                    removeBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        removeFile(index);
+                    });
+                    
+                    thumbnail.appendChild(img);
+                    thumbnail.appendChild(removeBtn);
+                    galleryPreview.appendChild(thumbnail);
+                };
+                
+                reader.readAsDataURL(file);
+            });
+        }
+    }
+    
+    // Eliminar una imagen
+    function removeFile(index) {
+        files.splice(index, 1);
+        
+        // Actualizar el input file
+        const dataTransfer = new DataTransfer();
+        files.forEach(file => dataTransfer.items.add(file));
+        fileInput.files = dataTransfer.files;
+        
+        updateFileCounter();
+        renderThumbnails();
+    }
+});
+</script>
+{% endblock %}

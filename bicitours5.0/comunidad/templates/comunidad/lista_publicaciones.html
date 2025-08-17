@@ -1,0 +1,213 @@
+{% extends "comunidad/base_comunidad.html" %}
+
+{% block comunidad_content %}
+<h1 class="comunidad-title">Comunidad BikeRoutes</h1>
+
+{% if user.is_authenticated %}
+<div style="text-align: center;">
+    <a href="{% url 'comunidad:nueva_publicacion' %}" class="btn-new-post">Crear Publicación</a>
+</div>
+{% endif %}
+
+{% for publicacion in publicaciones %}
+<div class="publicacion-card">
+    <div class="publicacion-header">
+        {% if publicacion.usuario.perfil.foto %}
+        <img src="{{ publicacion.usuario.perfil.foto.url }}" alt="{{ publicacion.usuario.username }}" class="user-avatar">
+        {% endif %}
+        <div class="user-info">
+            <span class="publicacion-user">{{ publicacion.usuario.username }}</span>
+            <span class="publicacion-date">{{ publicacion.fecha_publicacion|date:"d M Y, H:i" }}</span>
+        </div>
+        
+        {% if publicacion.puede_eliminar %}
+        <form action="{% url 'comunidad:eliminar_publicacion' publicacion.pk %}" method="post" style="margin-left: auto;">
+            {% csrf_token %}
+            <button type="submit" class="delete-publicacion"></button>
+        </form>
+        {% endif %}
+    </div>
+    
+    <div class="publicacion-body">
+        <a href="{% url 'comunidad:detalle_publicacion' publicacion.pk %}">
+            <h3 class="publicacion-title">{{ publicacion.titulo }}</h3>
+        </a>
+        
+        <a href="{% url 'recorridos:detalle' publicacion.recorrido.pk %}" class="publicacion-receta">
+        Recorrido: {{ publicacion.recorrido.ciudad }} 
+        </a>
+        
+        <p class="publicacion-content">{{ publicacion.contenido }}</p>
+        
+        {% if publicacion.fotos.exists %}
+        <div class="publicacion-fotos">
+            {% for foto in publicacion.fotos.all|slice:":3" %}
+            <img src="{{ foto.imagen.url }}" alt="{{ foto.descripcion }}" class="publicacion-foto">
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="publicacion-actions">
+        <form action="{% url 'comunidad:like_publicacion' publicacion.pk %}" method="post" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="like-btn {% if user in publicacion.likes.all %}liked{% endif %}">
+                ❤️ <span class="like-count">{{ publicacion.likes.count }}</span>
+            </button>
+        </form>
+        
+        <a href="{% url 'comunidad:detalle_publicacion' publicacion.pk %}#comentarios" class="comment-btn">
+            💬 <span class="comment-count">{{ publicacion.comentarios.count }}</span>
+        </a>
+    </div>
+</div>
+{% empty %}
+<div class="empty-state">
+    <p>No hay publicaciones aún. ¡Sé el primero en compartir tu experiencia!</p>
+    {% if not user.is_authenticated %}
+    <p style="margin-top: 15px;"><a href="{% url 'login' %}?next={% url 'comunidad:lista_publicaciones' %}" class="login-link">Inicia sesión</a> para crear una publicación.</p>
+    {% endif %}
+</div>
+{% endfor %}
+
+<style>
+    /* Estilos para fotos de perfil */
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-right: 10px;
+    }
+
+    /* Encabezado de publicación mejorado */
+    .publicacion-header {
+        display: flex;
+        align-items: center;
+        padding: 10px 15px;
+    }
+
+    .user-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .publicacion-user {
+        font-weight: 600;
+        color: #01708b;
+    }
+
+    .publicacion-date {
+        font-size: 0.8rem;
+        color: #666;
+    }
+
+    /* Botón de eliminar */
+    .delete-publicacion {
+        background: none;
+        border: none;
+        color: #dc3545;
+        cursor: pointer;
+        font-size: 1rem;
+        padding: 5px;
+    }
+
+    /* Tarjeta de publicación */
+    .publicacion-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+
+    .publicacion-body {
+        padding: 0 15px 15px;
+    }
+
+    .publicacion-title {
+        color: #2c2c2c;
+        margin-top: 5px;
+        margin-bottom: 10px;
+    }
+
+    .publicacion-receta {
+        display: block;
+        color: #01a699;
+        margin-bottom: 10px;
+        font-size: 0.9rem;
+    }
+
+    .publicacion-content {
+        color: #333;
+        margin-bottom: 15px;
+        line-height: 1.5;
+    }
+
+    /* Fotos de publicación */
+    .publicacion-fotos {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .publicacion-foto {
+        max-width: 150px;
+        max-height: 150px;
+        border-radius: 4px;
+        object-fit: cover;
+    }
+
+    /* Acciones de publicación */
+    .publicacion-actions {
+        display: flex;
+        padding: 10px 15px;
+        border-top: 1px solid #eee;
+        gap: 15px;
+    }
+
+    .like-btn, .comment-btn {
+        background: none;
+        border: none;
+        color: #666;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.9rem;
+    }
+
+    .like-btn.liked {
+        color: #dc3545;
+    }
+
+    /* Estado vacío */
+    .empty-state {
+        text-align: center;
+        padding: 30px;
+        color: #666;
+    }
+
+    .login-link {
+        color: #01a699;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    /* Botón nueva publicación */
+    .btn-new-post {
+        display: inline-block;
+        background-color: #01a699;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 20px;
+        text-decoration: none;
+        margin-bottom: 20px;
+        font-weight: 600;
+    }
+
+    .btn-new-post:hover {
+        background-color: #018575;
+    }
+</style>
+{% endblock %}

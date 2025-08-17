@@ -1,0 +1,528 @@
+{% extends "base.html" %}
+
+{% block extra_style %}
+<style>
+    .comunidad-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .comunidad-title {
+        color: var(--azul);
+        font-size: 2.2rem;
+        margin-bottom: 30px;
+        font-weight: 800;
+        text-align: center;
+        position: relative;
+    }
+    
+    .comunidad-title:after {
+        content: "";
+        display: block;
+        width: 80px;
+        height: 4px;
+        background: var(--verde);
+        margin: 15px auto 0;
+        border-radius: 2px;
+    }
+    
+    .btn-new-post {
+        background: var(--verde);
+        color: white;
+        padding: 12px 25px;
+        border-radius: 30px;
+        display: inline-flex;
+        align-items: center;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s;
+        box-shadow: 0 4px 12px rgba(1, 166, 153, 0.3);
+        margin-bottom: 30px;
+    }
+    
+    .btn-new-post:hover {
+        background: var(--verde-oscuro);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(1, 133, 117, 0.4);
+    }
+    
+    .btn-new-post:before {
+        content: "+";
+        font-size: 1.5rem;
+        margin-right: 8px;
+    }
+    
+    .publicacion-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+        margin-bottom: 40px;
+        overflow: hidden;
+        transition: transform 0.3s, box-shadow 0.3s;
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+    
+    .publicacion-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px rgba(0,0,0,0.12);
+    }
+    
+    .publicacion-header {
+        padding: 18px 25px;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        display: flex;
+        align-items: center;
+    }
+    
+    .publicacion-user {
+        font-weight: 700;
+        color: var(--azul);
+        display: flex;
+        align-items: center;
+    }
+    
+    .publicacion-user:before {
+        /*content: "👤"; Cambios por Imagenes de perfil*/ 
+        margin-right: 8px;
+        font-size: 0.9em;
+    }
+    
+    .publicacion-date {
+        font-size: 0.85rem;
+        color: #888;
+        margin-left: auto;
+    }
+    
+    .publicacion-body {
+        padding: 25px;
+    }
+    
+    .publicacion-title {
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+        color: var(--gris-oscuro);
+        font-weight: 700;
+    }
+    
+    .publicacion-content {
+        line-height: 1.7;
+        margin-bottom: 20px;
+        color: #555;
+    }
+    
+    .publicacion-receta {
+        display: inline-flex;
+        align-items: center;
+        background: var(--gris-claro);
+        padding: 8px 15px;
+        border-radius: 30px;
+        font-size: 0.9rem;
+        color: var(--azul);
+        margin-bottom: 20px;
+        text-decoration: none;
+        transition: all 0.3s;
+        border: 1px solid rgba(1, 112, 139, 0.1);
+    }
+    
+    .publicacion-receta:hover {
+        background: rgba(1, 166, 153, 0.1);
+        color: var(--verde-oscuro);
+    }
+    
+    .publicacion-receta:before {
+        content: "📍";
+        margin-right: 8px;
+    }
+    
+    .publicacion-fotos {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 15px;
+        margin: 20px 0;
+    }
+    
+    .publicacion-foto {
+        height: 220px;
+        object-fit: cover;
+        width: 100%;
+        border-radius: 10px;
+        transition: transform 0.3s ease;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        cursor: zoom-in;
+    }
+    
+    .publicacion-foto:hover {
+        transform: scale(1.02);
+    }
+    
+    .publicacion-actions {
+        display: flex;
+        padding: 15px 25px;
+        border-top: 1px solid rgba(0,0,0,0.05);
+        align-items: center;
+    }
+    
+    .like-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        color: #aaa;
+        font-weight: 600;
+        padding: 8px 15px;
+        border-radius: 20px;
+        transition: all 0.3s;
+    }
+    
+    .like-btn:hover {
+        background: rgba(255, 0, 0, 0.05);
+        color: #ff6b6b;
+    }
+    
+    .like-btn.liked {
+        color: #ff4757;
+    }
+    
+    .like-count {
+        margin-left: 8px;
+    }
+    
+    .comment-btn {
+        display: flex;
+        align-items: center;
+        color: #aaa;
+        text-decoration: none;
+        margin-left: 15px;
+        padding: 8px 15px;
+        border-radius: 20px;
+        transition: all 0.3s;
+    }
+    
+    .comment-btn:hover {
+        background: rgba(1, 166, 153, 0.1);
+        color: var(--verde);
+    }
+    
+    .comment-count {
+        margin-left: 8px;
+    }
+    
+    .comentarios-section {
+        background: var(--gris-claro);
+        padding: 25px;
+        border-radius: 0 0 12px 12px;
+        border-top: 1px solid rgba(0,0,0,0.05);
+    }
+    
+    .section-title {
+        font-size: 1.3rem;
+        margin-bottom: 20px;
+        color: var(--azul);
+        display: flex;
+        align-items: center;
+    }
+    
+    .section-title:before {
+        content: "💬";
+        margin-right: 10px;
+    }
+    
+    .comentario {
+        margin-bottom: 18px;
+        padding-bottom: 18px;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        position: relative;
+    }
+    
+    .comentario:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+    
+    .comentario-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+    
+    .comentario-user {
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: var(--azul);
+    }
+    
+    .comentario-user:before {
+        /*content: "👤";*/
+        margin-right: 8px;
+        font-size: 0.9em;
+    }
+    
+    .comentario-date {
+        font-size: 0.75rem;
+        color: #888;
+        margin-left: 15px;
+    }
+    
+    .comentario-content {
+        margin-top: 5px;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: #555;
+        padding-left: 25px;
+    }
+    
+    .comentario-actions {
+        position: absolute;
+        top: 0;
+        right: 0;
+    }
+    
+    .delete-comment, .delete-publicacion {
+        background: none;
+        border: none;
+        color: #ff6b6b;
+        cursor: pointer;
+        font-size: 0.9rem;
+        padding: 2px 5px;
+        border-radius: 3px;
+        transition: all 0.2s;
+    }
+    
+    .delete-comment:hover, .delete-publicacion:hover {
+        background: rgba(255, 0, 0, 0.1);
+    }
+    
+    .delete-comment:before {
+        content: "🗑️";
+        margin-right: 5px;
+    }
+    
+    .delete-publicacion:before {
+        content: "🗑️ Publicación";
+        margin-right: 5px;
+    }
+    
+    .form-comentario {
+        margin-top: 25px;
+    }
+    
+    .textarea-comentario {
+        width: 100%;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-family: 'Poppins', sans-serif;
+        resize: vertical;
+        min-height: 80px;
+        margin-bottom: 15px;
+        transition: all 0.3s;
+    }
+    
+    .textarea-comentario:focus {
+        border-color: var(--verde);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(1, 166, 153, 0.2);
+    }
+    
+    .btn-submit {
+        background: var(--verde);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 30px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s;
+        box-shadow: 0 4px 12px rgba(1, 166, 153, 0.3);
+    }
+    
+    .btn-submit:hover {
+        background: var(--verde-oscuro);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(1, 133, 117, 0.4);
+    }
+    
+    .login-prompt {
+        text-align: center;
+        padding: 15px;
+        background: white;
+        border-radius: 8px;
+        margin-top: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    
+    .login-link {
+        color: var(--verde);
+        font-weight: 600;
+        text-decoration: none;
+    }
+    
+    .login-link:hover {
+        text-decoration: underline;
+    }
+    
+    /* Formulario nueva publicación */
+    .form-container {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .form-title {
+        font-size: 1.8rem;
+        color: var(--azul);
+        margin-bottom: 25px;
+        text-align: center;
+        font-weight: 700;
+    }
+    
+    .form-group {
+        margin-bottom: 25px;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 10px;
+        font-weight: 600;
+        color: var(--gris-oscuro);
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-family: 'Poppins', sans-serif;
+        transition: all 0.3s;
+    }
+    
+    .form-control:focus {
+        border-color: var(--verde);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(1, 166, 153, 0.2);
+    }
+    
+    .file-input-container {
+        margin-bottom: 20px;
+    }
+    
+    .file-input-label {
+        display: block;
+        margin-bottom: 10px;
+        font-weight: 600;
+        color: var(--gris-oscuro);
+    }
+    
+    .file-input {
+        width: 100%;
+    }
+    
+    .file-hint {
+        font-size: 0.85rem;
+        color: #888;
+        margin-top: 5px;
+    }
+    
+    .btn-primary {
+        background: var(--verde);
+        color: white;
+        border: none;
+        padding: 14px 30px;
+        border-radius: 30px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s;
+        box-shadow: 0 4px 12px rgba(1, 166, 153, 0.3);
+        width: 100%;
+        margin-top: 10px;
+    }
+    
+    .btn-primary:hover {
+        background: var(--verde-oscuro);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(1, 133, 117, 0.4);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    
+    .empty-state p {
+        font-size: 1.1rem;
+        color: #666;
+    }
+    
+    @media (max-width: 768px) {
+        .publicacion-fotos {
+            grid-template-columns: 1fr;
+        }
+        
+        .publicacion-foto {
+            height: 250px;
+        }
+        
+        .comunidad-title {
+            font-size: 1.8rem;
+        }
+        
+        .form-container {
+            padding: 20px;
+        }
+        
+        .publicacion-header {
+            flex-wrap: wrap;
+        }
+        
+        .publicacion-date {
+            width: 100%;
+            margin-top: 10px;
+            margin-left: 0;
+        }
+    }
+
+     .btn-back {
+        background: var(--azul);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 30px;
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-block;
+        transition: all 0.3s;
+        box-shadow: 0 4px 12px rgba(1, 112, 139, 0.3);
+    }
+
+    .btn-back:hover {
+        background: var(--primario);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(1, 103, 134, 0.4);
+    }
+
+    @media (max-width: 600px) {
+        .btn-new-post, .btn-back {
+            display: block;
+            width: 100%;
+            margin-bottom: 10px;
+            margin-left: 0;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="comunidad-container">
+    {% block comunidad_content %}{% endblock %}
+</div>
+{% endblock %}

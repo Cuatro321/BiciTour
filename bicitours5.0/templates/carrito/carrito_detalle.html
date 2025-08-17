@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Carrito - BikeRoutes MX{% endblock %}
+
+{% block extra_style %}
+<style>
+  :root {
+    --primario: #027c8f;
+    --secundario: #00c381;
+    --gris-medio: #ddd;
+    --gris-oscuro: #2c2c2c;
+    --blanco: #fff;
+  }
+
+  .carrito-container {
+    background: var(--blanco);
+    padding: 30px 25px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    max-width: 900px;
+    margin: 40px auto;
+  }
+
+  .carrito-title {
+    text-align: center;
+    font-weight: 700;
+    font-size: 2rem;
+    color: var(--primario);
+    margin-bottom: 25px;
+  }
+
+  .carrito-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--gris-medio);
+    padding: 15px 0;
+  }
+
+  .carrito-item:last-child {
+    border-bottom: none;
+  }
+
+  .carrito-nombre {
+    font-weight: 600;
+    color: var(--primario);
+    flex: 2;
+  }
+
+  .carrito-cantidad {
+    flex: 1;
+  }
+
+  .carrito-cantidad input {
+    width: 70px;
+    padding: 6px 8px;
+    font-size: 1rem;
+    border-radius: 6px;
+    border: 1px solid var(--gris-medio);
+    text-align: center;
+  }
+
+  .carrito-subtotal {
+    flex: 1;
+    font-weight: 600;
+    text-align: right;
+    color: var(--gris-oscuro);
+  }
+
+  .carrito-acciones {
+    flex: 1;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  .btn-custom {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    color: var(--blanco);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+
+  .btn-actualizar {
+    background-color: var(--secundario);
+  }
+  .btn-actualizar:hover {
+    background-color: #00b374;
+  }
+
+  .btn-eliminar {
+    background-color: #d9534f;
+  }
+  .btn-eliminar:hover {
+    background-color: #c9302c;
+  }
+
+  .total-container {
+    margin-top: 30px;
+    text-align: right;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--primario);
+  }
+
+  .botones-finales {
+    margin-top: 40px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .btn-vaciar {
+    background-color: #6c757d;
+  }
+  .btn-vaciar:hover {
+    background-color: #5a6268;
+  }
+
+  .btn-seguir {
+    background-color: var(--secundario);
+  }
+  .btn-seguir:hover {
+    background-color: #00b374;
+  }
+
+  .btn-comprar {
+    background-color: var(--primario);
+    color: white;
+    font-weight: 700;
+    padding: 12px 24px;
+    border-radius: 12px;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  .btn-comprar:hover {
+    background-color: #025f70;
+  }
+
+  @media (max-width: 600px) {
+    .carrito-item {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .carrito-subtotal,
+    .carrito-acciones {
+      width: 100%;
+      text-align: left;
+      justify-content: flex-start;
+    }
+    .carrito-acciones {
+      gap: 15px;
+    }
+    .botones-finales {
+      flex-direction: column;
+      gap: 15px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="carrito-container">
+  <h2 class="carrito-title">🛒 Tu Carrito de Compras</h2>
+
+  {% if items %}
+    {% for item in items %}
+      <div class="carrito-item">
+        <div class="carrito-nombre">{{ item.producto.nombre }}</div>
+
+        <div class="carrito-cantidad">
+          <form method="post" action="{% url 'carrito:actualizar' item.id %}">
+            {% csrf_token %}
+            <input type="number" name="cantidad" min="1" value="{{ item.cantidad }}" required>
+            <button type="submit" class="btn-custom btn-actualizar">Actualizar</button>
+          </form>
+        </div>
+
+        <div class="carrito-subtotal">
+          ${{ item.subtotal|floatformat:2 }}
+        </div>
+
+        <div class="carrito-acciones">
+          <form method="post" action="{% url 'carrito:eliminar' item.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn-custom btn-eliminar">Eliminar</button>
+          </form>
+        </div>
+      </div>
+    {% endfor %}
+
+    <div class="total-container">
+      Total: ${{ total|floatformat:2 }}
+    </div>
+
+    <div class="botones-finales">
+      <a href="{% url 'mercancia:lista' %}" class="btn-custom btn-seguir">← Seguir comprando</a>
+
+      <form method="post" action="{% url 'carrito:vaciar' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn-custom btn-vaciar">Vaciar Carrito</button>
+      </form>
+
+      <form method="post" action="{% url 'carrito:procesar_compra' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn-comprar">Comprar</button>
+      </form>
+    </div>
+
+  {% else %}
+    <p style="text-align: center; font-size: 1.2rem; color: var(--gris-oscuro); margin-top: 30px;">
+      Tu carrito está vacío.
+    </p>
+    <div style="text-align: center; margin-top: 20px;">
+      <a href="{% url 'mercancia:lista' %}" class="btn-custom btn-seguir">Explorar Productos</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,335 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2 class="titulo-principal">🛍️ Catálogo de Productos</h2>
+
+  <form method="get" class="form-filtro mb-4">
+    <div class="filtros-contenedor">
+      <input type="text" name="categoria" placeholder="Categoría" class="form-control" value="{{ request.GET.categoria }}">
+      <input type="number" step="0.01" name="precio_max" placeholder="Precio máximo" class="form-control" value="{{ request.GET.precio_max }}">
+      <select name="disponible" class="form-select">
+        <option value="">Todos</option>
+        <option value="1" {% if request.GET.disponible == '1' %}selected{% endif %}>Solo disponibles</option>
+      </select>
+      <button type="submit" class="btn-principal btn-filtrar">Filtrar</button>
+    </div>
+  </form>
+
+  <div class="grid-recorridos" aria-label="Catálogo de productos">
+    {% for producto in productos %}
+      <article class="card-recorrido" tabindex="0" aria-label="Producto {{ producto.nombre }}">
+        
+        <!-- Badge de disponibilidad -->
+        <div class="badge-disponibilidad {% if producto.disponible %}disponible{% else %}no-disponible{% endif %}">
+          {% if producto.disponible %}✅ Disponible{% else %}❌ No disponible{% endif %}
+        </div>
+
+        {% if producto.imagen %}
+          <img src="{{ producto.imagen.url }}" alt="Imagen de {{ producto.nombre }}" class="img-recorrido">
+        {% else %}
+          <div class="img-recorrido sin-imagen" role="img" aria-label="Sin imagen disponible">
+            Sin imagen
+          </div>
+        {% endif %}
+        <div class="contenido">
+          {% if producto.categoria %}
+            <span class="categoria">📂 {{ producto.categoria }}</span>
+          {% endif %}
+          <h3>{{ producto.nombre }}</h3>
+          <p>{{ producto.descripcion|truncatechars:100 }}</p>
+          <p><strong>Precio:</strong> <span class="precio">${{ producto.precio }}</span></p>
+          <p>{% if producto.disponible %}🟢 Disponible{% else %}🔴 No disponible{% endif %}</p>
+        </div>
+
+        <!-- Botón dinámico -->
+        {% if producto.disponible %}
+          <a class="btn-principal" href="{% url 'carrito:agregar' producto.id %}" aria-label="Agregar {{ producto.nombre }} al carrito">
+            🛒 Agregar al carrito
+          </a>
+        {% else %}
+          <div class="btn-no-disponible">🚫 No disponible</div>
+        {% endif %}
+      </article>
+    {% empty %}
+      <p class="sin-recorridos">No hay productos disponibles.</p>
+    {% endfor %}
+  </div>
+{% endblock %}
+
+{% block extra_style %}
+<style>
+  :root {
+    --color-azul: #01708b;
+    --color-verde: #01a699;
+    --color-verde-oscuro: #018575;
+    --color-gris-claro: #f9f9f9;
+    --color-gris-medio: #ddd;
+    --color-gris-oscuro: #555;
+    --color-blanco: #fff;
+    --color-borde-card: #b3e0ea;
+    --sombra-suave: rgba(1, 160, 153, 0.25);
+    --sombra-fuerte: rgba(1, 133, 117, 0.4);
+  }
+
+  .titulo-principal {
+    text-align: center;
+    margin-bottom: 50px;
+    color: var(--color-azul);
+    font-weight: 900;
+    font-size: 2.8rem;
+    letter-spacing: 0.06em;
+    text-shadow: 1px 1px 3px var(--sombra-suave);
+  }
+
+  /* Barra de filtros horizontal */
+  .form-filtro {
+    max-width: 900px;
+    margin: 0 auto 40px auto;
+  }
+
+  .filtros-contenedor {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .filtros-contenedor input.form-control,
+  .filtros-contenedor select.form-select {
+    flex: 1 1 180px;
+    border: 2px solid var(--color-borde-card);
+    border-radius: 10px;
+    font-weight: 600;
+    padding: 8px 12px;
+    transition: border-color 0.3s ease;
+  }
+
+  .filtros-contenedor input.form-control:focus,
+  .filtros-contenedor select.form-select:focus {
+    border-color: var(--color-verde);
+    box-shadow: 0 0 6px var(--color-verde);
+    outline: none;
+  }
+
+  .btn-filtrar {
+    flex: 0 0 120px;
+    background-color: var(--color-verde);
+    font-weight: 900;
+    border-radius: 24px;
+    box-shadow: 0 10px 30px rgba(1,166,153,0.5);
+    padding: 12px 0;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    color: var(--color-blanco);
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-filtrar:hover {
+    background-color: var(--color-verde-oscuro);
+    box-shadow: 0 14px 42px rgba(1,133,117,0.7);
+  }
+
+  /* Grid productos igual que recorridos */
+  .grid-recorridos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 40px;
+    max-width: 1080px;
+    margin: 0 auto 60px;
+    padding: 0 15px;
+  }
+
+  /* Cards iguales a las de recorridos */
+  .card-recorrido {
+    position: relative;
+    background-color: var(--color-blanco);
+    border-radius: 20px;
+    border: 3px solid var(--color-borde-card);
+    box-shadow: 0 16px 40px var(--sombra-suave);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.3s ease;
+    cursor: pointer;
+    min-height: 560px;
+    max-height: 560px;
+  }
+
+  .card-recorrido:hover,
+  .card-recorrido:focus {
+    transform: translateY(-10px);
+    box-shadow: 0 24px 60px var(--sombra-fuerte);
+    border-color: var(--color-verde);
+    outline: none;
+  }
+
+  .img-recorrido {
+    width: 100%;
+    height: 260px;
+    object-fit: cover;
+    border-bottom: 5px solid var(--color-verde);
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+  }
+
+  .card-recorrido:hover .img-recorrido {
+    transform: scale(1.04);
+  }
+
+  .sin-imagen {
+    background-color: var(--color-gris-medio);
+    color: var(--color-gris-oscuro);
+    font-weight: 700;
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 260px;
+    border-bottom: 5px solid var(--color-verde);
+  }
+
+  .contenido {
+    flex-grow: 1;
+    padding: 28px 28px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .contenido h3 {
+    margin: 0;
+    font-weight: 900;
+    font-size: 1.7rem;
+    color: var(--color-azul);
+    letter-spacing: 0.03em;
+  }
+
+  .contenido p {
+    margin: 0;
+    font-weight: 600;
+    font-size: 1.05rem;
+    line-height: 1.5;
+    color: var(--color-gris-oscuro);
+  }
+
+  .precio {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--color-azul);
+  }
+
+  .btn-principal {
+    background-color: var(--color-verde);
+    color: var(--color-blanco);
+    font-weight: 900;
+    padding: 12px 36px;
+    border-radius: 24px;
+    text-decoration: none;
+    font-size: 1.1rem;
+    box-shadow: 0 10px 30px rgba(1,166,153,0.5);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    align-self: center;
+    margin-bottom: 25px;
+    display: inline-block;
+    text-align: center;
+  }
+
+  .btn-principal:hover {
+    background-color: var(--color-verde-oscuro);
+    box-shadow: 0 14px 42px rgba(1,133,117,0.7);
+  }
+
+  .btn-no-disponible {
+    background-color: var(--color-gris-medio);
+    color: var(--color-gris-oscuro);
+    font-weight: 900;
+    padding: 12px 36px;
+    border-radius: 24px;
+    text-align: center;
+    margin-bottom: 25px;
+    user-select: none;
+  }
+
+  /* Badge disponibilidad */
+  .badge-disponibilidad {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    padding: 6px 14px;
+    border-radius: 16px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--color-blanco);
+    z-index: 5;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+  }
+
+  .badge-disponibilidad.disponible {
+    background-color: var(--color-verde);
+  }
+
+  .badge-disponibilidad.no-disponible {
+    background-color: crimson;
+  }
+
+  /* Categoría */
+  .categoria {
+    display: inline-block;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--color-verde-oscuro);
+    background: var(--color-gris-claro);
+    padding: 4px 10px;
+    border-radius: 12px;
+    margin-bottom: 6px;
+  }
+
+  .sin-recorridos {
+    text-align: center;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--color-gris-oscuro);
+    margin-top: 40px;
+  }
+
+  @media (max-width: 700px) {
+    .grid-recorridos {
+      grid-template-columns: 1fr;
+    }
+
+    .card-recorrido {
+      min-height: auto;
+      max-height: none;
+    }
+
+    .img-recorrido {
+      height: 200px;
+    }
+
+    .contenido h3 {
+      font-size: 1.5rem;
+    }
+
+    .contenido p {
+      font-size: 1rem;
+    }
+
+    .btn-principal {
+      font-size: 1rem;
+      padding: 10px 28px;
+    }
+
+    .filtros-contenedor {
+      flex-direction: column;
+      gap: 12px;
+      max-width: 100%;
+      margin-bottom: 30px;
+    }
+
+    .btn-filtrar {
+      flex: 1 1 auto;
+      width: 100%;
+    }
+  }
+</style>
+{% endblock %}

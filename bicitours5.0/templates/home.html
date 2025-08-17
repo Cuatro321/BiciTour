@@ -1,0 +1,479 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>{% block title %}BikeRoutes MX{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primario: #027c8f;
+      --secundario: #00c381;
+      --verde: #01a699;
+      --verde-oscuro: #018575;
+      --azul: #01708b;
+      --gris-claro: #f5f5f5;
+      --gris-medio: #ddd;
+      --gris-oscuro: #2c2c2c;
+      --blanco: #ffffff;
+      --sombra: rgba(0, 0, 0, 0.05);
+      --menu-bg: #2c3e50;
+      --menu-texto: #ecf0f1;
+      --menu-hover: #34495e;
+      --admin-color: #d63384;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--gris-claro);
+      color: var(--gris-oscuro);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    .site-header {
+      background-color: var(--primario);
+      padding: 18px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      box-shadow: 0 4px 10px var(--sombra);
+      position: relative;
+      z-index: 1000; /* Asegura que el header esté por encima */
+    }
+
+    .site-header .logo {
+      font-size: 1.9rem;
+      font-weight: 800;
+      color: var(--blanco);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .site-header .logo::before {
+      content: "🚴";
+      font-size: 1.5rem;
+      margin: 0;
+    }
+
+    .site-header nav {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .site-header nav a {
+      color: var(--blanco);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1rem;
+      padding: 8px 14px;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      background: rgba(255,255,255,0.05);
+    }
+
+    .site-header nav a:hover {
+      background-color: var(--secundario);
+      color: var(--blanco);
+    }
+
+    /* Menú de usuario */
+    .user-menu {
+        position: relative;
+        display: inline-block;
+        z-index: 1001; /* Mayor que el header */
+    }
+
+    .user-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-right: 8px;
+        border: 2px solid var(--blanco);
+    }
+
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        right: 0;
+        background-color: var(--menu-bg);
+        min-width: 200px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        z-index: 1002; /* Mayor que el menú y el header */
+        border-radius: 8px;
+        overflow: hidden;
+        margin-top: 5px;
+    }
+
+    .user-menu.active .dropdown-content {
+        display: block;
+    }
+
+    .dropdown-item {
+        color: var(--menu-texto);
+        padding: 12px 16px;
+        text-decoration: none;
+        display: block;
+        transition: all 0.3s ease;
+        font-family: 'Poppins', sans-serif;
+        font-size: 0.95rem;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        background: none;
+        border: none;
+        width: 100%;
+        text-align: left;
+        cursor: pointer;
+    }
+
+    .dropdown-item:last-child {
+        border-bottom: none;
+    }
+
+    .dropdown-item:hover {
+        background-color: var(--menu-hover);
+        color: var(--blanco);
+        padding-left: 20px;
+    }
+
+    .dropdown-item svg {
+        margin-right: 10px;
+        width: 16px;
+        height: 16px;
+        vertical-align: middle;
+    }
+
+    .avatar-placeholder {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--gris-claro);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .user-menu-container {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        color: var(--blanco);
+        padding: 8px 14px;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        background: rgba(255,255,255,0.05);
+    }
+
+    .user-menu-container:hover {
+        background-color: var(--secundario);
+    }
+
+    main {
+      flex-grow: 1;
+      padding: 30px 15px;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+      box-sizing: border-box;
+      position: relative;
+      z-index: 1; /* Menor que el header y menú */
+    }
+
+    .site-footer {
+      background-color: var(--primario);
+      color: white;
+      text-align: center;
+      padding: 16px 20px;
+      font-size: 0.9rem;
+      margin-top: auto;
+      width: 100%;
+      position: relative;
+      z-index: 1; /* Menor que el header y menú */
+    }
+
+    /* Banner hero */
+    .hero-banner {
+      position: relative;
+      width: 100%;
+      max-width: 1200px;
+      min-height: 70vh;
+      background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      margin: 30px auto;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      color: var(--blanco);
+      text-shadow: 0 2px 8px rgba(0,0,0,0.7);
+      padding: 0 30px;
+      box-sizing: border-box;
+      z-index: 1; /* Menor que el header y menú */
+    }
+
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(1, 103, 134, 0.7);
+      z-index: 1;
+      border-radius: 16px;
+    }
+
+    .hero-contenido {
+      position: relative;
+      max-width: 695px;
+      width: 100%;
+      color: white;
+      text-align: center;
+      z-index: 2;
+    }
+
+    .hero-contenido h1 {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 800;
+      font-size: 3.8rem;
+      margin-bottom: 16px;
+      text-shadow: 2px 2px 6px rgba(0,0,0,0.7);
+      letter-spacing: 0.1em;
+    }
+
+    .hero-contenido p {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      font-size: 1.5rem;
+      margin-bottom: 32px;
+      text-shadow: 1px 1px 4px rgba(0,0,0,0.6);
+    }
+
+    .btn-hero {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--verde);
+      color: var(--blanco);
+      font-weight: 900;
+      font-size: 1.3rem;
+      padding: 16px 56px;
+      border-radius: 40px;
+      text-decoration: none;
+      box-shadow: 0 10px 32px rgba(1,166,153,0.6);
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+      display: inline-block;
+    }
+
+    .btn-hero:hover,
+    .btn-hero:focus {
+      background-color: var(--verde-oscuro);
+      box-shadow: 0 14px 48px rgba(1,133,117,0.8);
+      outline: none;
+    }
+
+    /* Mensajes flash */
+    .messages {
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 12px 18px;
+      border-radius: 8px;
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+      font-weight: 600;
+      position: relative;
+      z-index: 1;
+    }
+
+    @media (max-width: 992px) {
+      .hero-contenido h1 {
+        font-size: 2.8rem;
+      }
+      .hero-contenido p {
+        font-size: 1.2rem;
+        margin-bottom: 24px;
+      }
+      .btn-hero {
+        font-size: 1.1rem;
+        padding: 14px 48px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .site-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .site-header nav {
+        width: 100%;
+        justify-content: flex-start;
+        gap: 12px;
+      }
+
+      .site-header .logo {
+        font-size: 1.6rem;
+      }
+
+      .dropdown-content {
+          right: auto;
+          left: 0;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .hero-banner {
+        min-height: 50vh;
+        padding: 0 15px;
+      }
+      .hero-contenido h1 {
+        font-size: 2rem;
+      }
+      .hero-contenido p {
+        font-size: 1rem;
+        margin-bottom: 18px;
+      }
+      .btn-hero {
+        font-size: 1rem;
+        padding: 12px 36px;
+      }
+    }
+      .admin-btn {
+      background-color: var(--admin-color);
+      color: var(--blanco);
+    }
+
+    .admin-btn:hover {
+      background-color: #a52d6b;
+      color: var(--blanco);
+    }
+  </style>
+
+  {% block extra_style %}{% endblock %}
+</head>
+<body>
+
+   <header class="site-header">
+    <div class="logo">BikeRoutes MX</div>
+    <nav>
+      <a href="{% url 'home' %}">Inicio</a>
+      <a href="{% url 'recorridos:lista' %}">Recorridos</a>
+      <a href="{% url 'inscripciones:nueva' %}">Inscripción</a>
+      <a href="{% url 'mercancia:lista' %}">Catálogo</a>
+      <a href="{% url 'comunidad:lista_publicaciones' %}">Comunidad</a>
+
+      {% if user.is_authenticated %}
+        {% if user.is_staff %}
+          <a href="{% url 'admin:index' %}" class="admin-btn">Administración</a>
+        {% endif %}
+        
+        <a href="{% url 'carrito:detalle' %}">🛒 Carrito</a>
+
+        <div class="user-menu">
+          <div class="user-menu-container">
+            {% if user.perfil.foto %}
+              <img src="{{ user.perfil.foto.url }}" alt="Foto de perfil" class="user-avatar">
+            {% else %}
+              <div class="avatar-placeholder">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="var(--blanco)">
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
+              </div>
+            {% endif %}
+            <span>{{ user.username }}</span>
+          </div>
+          <div class="dropdown-content">
+            <a href="{% url 'usuarios:editar_perfil' %}" class="dropdown-item">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+              </svg>
+              Editar perfil
+            </a>
+            <form method="post" action="{% url 'logout' %}">
+              {% csrf_token %}
+              <button type="submit" class="dropdown-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
+                </svg>
+                Cerrar sesión
+              </button>
+            </form>
+          </div>
+        </div>
+
+      {% else %}
+        <a href="{% url 'login' %}">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="var(--blanco)" width="18" height="18">
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+          </svg>
+          Iniciar Sesión
+        </a>
+      {% endif %}
+    </nav>
+  </header>
+
+  <main>
+    {% if messages %}
+      <div class="messages">
+        {% for message in messages %}
+          {{ message }}
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% block content %}
+    <section class="hero-banner">
+      <div class="hero-overlay"></div>
+      <div class="hero-contenido">
+        <h1>¡Explora México en Bicicleta!</h1>
+        <p>Únete a nuestras aventuras y recorre los mejores paisajes en dos ruedas.</p>
+        <a href="{% url 'recorridos:lista' %}" class="btn-hero">Ver Recorridos</a>
+      </div>
+    </section>
+    {% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    &copy; 2025 BikeRoutes MX — Aventuras sobre ruedas por todo México 🚴‍♀️
+  </footer>
+
+  <script>
+    // JavaScript para manejar el menú desplegable
+    document.addEventListener('DOMContentLoaded', function() {
+      const userMenu = document.querySelector('.user-menu');
+      
+      if (userMenu) {
+        const userMenuContainer = userMenu.querySelector('.user-menu-container');
+        
+        userMenuContainer.addEventListener('click', function(e) {
+          e.stopPropagation(); // Evita que el clic se propague
+          userMenu.classList.toggle('active');
+        });
+
+        // Cierra el menú al hacer clic en cualquier parte del documento
+        document.addEventListener('click', function() {
+          const openMenu = document.querySelector('.user-menu.active');
+          if (openMenu) {
+            openMenu.classList.remove('active');
+          }
+        });
+
+        // Evita que el menú se cierre al hacer clic dentro de él
+        const dropdownContent = userMenu.querySelector('.dropdown-content');
+        if (dropdownContent) {
+          dropdownContent.addEventListener('click', function(e) {
+            e.stopPropagation();
+          });
+        }
+      }
+    });
+  </script>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

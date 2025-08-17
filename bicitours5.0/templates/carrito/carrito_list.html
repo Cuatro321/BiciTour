@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Listado Carrito - BikeRoutes MX{% endblock %}
+
+{% block extra_style %}
+<style>
+  .lista-carrito-container {
+    max-width: 850px;
+    margin: 40px auto;
+    background: white;
+    padding: 25px 30px;
+    border-radius: 16px;
+    box-shadow: 0 3px 15px rgba(0,0,0,0.07);
+  }
+
+  h2 {
+    text-align: center;
+    color: #027c8f;
+    font-weight: 700;
+    margin-bottom: 30px;
+  }
+
+  ul.lista-carrito {
+    list-style: none;
+    padding: 0;
+  }
+
+  ul.lista-carrito li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #ddd;
+    padding: 14px 10px;
+    font-size: 1.1rem;
+  }
+
+  ul.lista-carrito li:last-child {
+    border-bottom: none;
+  }
+
+  .producto-nombre {
+    flex: 2;
+    font-weight: 600;
+    color: #027c8f;
+  }
+
+  .producto-cantidad {
+    flex: 1;
+    text-align: center;
+  }
+
+  .producto-subtotal {
+    flex: 1;
+    text-align: right;
+    font-weight: 600;
+  }
+
+  .btn-eliminar-item {
+    background-color: #d9534f;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  .btn-eliminar-item:hover {
+    background-color: #c9302c;
+  }
+
+  .acciones-finales {
+    margin-top: 30px;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .btn-seguir-comprando {
+    background-color: #00c381;
+    color: white;
+    padding: 10px 20px;
+    font-weight: 600;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    text-decoration: none;
+  }
+  .btn-seguir-comprando:hover {
+    background-color: #00b374;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="lista-carrito-container">
+  <h2>🛒 Productos en tu Carrito</h2>
+
+  {% if items %}
+    <ul class="lista-carrito">
+      {% for item in items %}
+      <li>
+        <div class="producto-nombre">{{ item.producto.nombre }}</div>
+        <div class="producto-cantidad">Cantidad: {{ item.cantidad }}</div>
+        <div class="producto-subtotal">Subtotal: ${{ item.subtotal|floatformat:2 }}</div>
+
+        <form method="post" action="{% url 'carrito:eliminar' item.id %}">
+          {% csrf_token %}
+          <button type="submit" class="btn-eliminar-item" title="Eliminar producto">Eliminar</button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+
+    <div class="acciones-finales">
+      <a href="{% url 'mercancia:lista' %}" class="btn-seguir-comprando">← Seguir comprando</a>
+    </div>
+
+  {% else %}
+    <p style="text-align: center; font-size: 1.2rem; margin: 40px 0; color: #444;">
+      Tu carrito está vacío.
+    </p>
+    <div style="text-align: center;">
+      <a href="{% url 'mercancia:lista' %}" class="btn-seguir-comprando">Explorar Productos</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

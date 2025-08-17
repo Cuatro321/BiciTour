@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Perfil - BikeRoutes MX{% endblock %}
+
+{% block extra_style %}
+<style>
+    /* Estilos para el contenedor del perfil */
+    .profile-container {
+        max-width: 700px;
+        margin: 40px auto;
+        padding: 30px;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    /* Estilos para el encabezado del perfil */
+    .profile-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .profile-title {
+        color: var(--azul);
+        font-weight: 800;
+        margin-bottom: 20px;
+    }
+
+    /* Estilos para la foto de perfil */
+    .profile-photo-container {
+        position: relative;
+        width: 150px;
+        height: 150px;
+        margin: 0 auto 20px;
+    }
+
+    .profile-photo {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid var(--verde);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .profile-photo-placeholder {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: var(--gris-claro);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 4px solid var(--gris-medio);
+    }
+
+    .profile-icon {
+        font-size: 3.5rem;
+        color: var(--gris-oscuro);
+    }
+
+    /* Estilos para el formulario */
+    .profile-form {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: var(--gris-oscuro);
+    }
+
+    .form-value {
+        padding: 10px 15px;
+        background: var(--gris-claro);
+        border-radius: 8px;
+        color: var(--gris-oscuro);
+    }
+
+    /* Estilos para los campos del formulario */
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="date"],
+    textarea,
+    input[type="file"] {
+        padding: 12px 15px;
+        border: 1px solid var(--gris-medio);
+        border-radius: 8px;
+        font-family: 'Poppins', sans-serif;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    input[type="file"] {
+        padding: 10px;
+        border: 1px dashed var(--gris-medio);
+    }
+
+    textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
+
+    /* Estilos para los botones */
+    .form-actions {
+        display: flex;
+        gap: 15px;
+        margin-top: 20px;
+        justify-content: center;
+    }
+
+    .btn-primary {
+        background-color: var(--verde);
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .btn-primary:hover {
+        background-color: var(--verde-oscuro);
+    }
+
+    .btn-secondary {
+        background-color: var(--gris-medio);
+        color: var(--gris-oscuro);
+        border: none;
+        padding: 12px 25px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        text-decoration: none;
+        text-align: center;
+    }
+
+    .btn-secondary:hover {
+        background-color: var(--gris-oscuro);
+        color: white;
+    }
+
+    /* Estilos para errores */
+    .error {
+        color: #dc3545;
+        font-size: 0.9rem;
+        margin-top: 5px;
+    }
+
+    /* Estilos responsivos */
+    @media (max-width: 768px) {
+        .profile-container {
+            margin: 20px;
+            padding: 20px;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .btn-primary, .btn-secondary {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="profile-header">
+        <h2 class="profile-title">✏️ Editar Perfil</h2>
+        <div class="profile-photo-container">
+            {% if form.instance.foto %}
+                <img src="{{ form.instance.foto.url }}" alt="Foto de perfil" class="profile-photo">
+            {% else %}
+                <div class="profile-photo-placeholder">
+                    <span class="profile-icon">👤</span>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="profile-form">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label class="form-label">Nombre de usuario:</label>
+            <div class="form-value">{{ user.username }}</div>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Nombre:</label>
+            <div class="form-value">{{ user.first_name|default:"No especificado" }}</div>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Apellido:</label>
+            <div class="form-value">{{ user.last_name|default:"No especificado" }}</div>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Email:</label>
+            <div class="form-value">{{ user.email|default:"No especificado" }}</div>
+        </div>
+        
+        {% for field in form %}
+        <div class="form-group">
+            {{ field.label_tag }}
+            {{ field }}
+            {% if field.errors %}
+                <div class="error">{{ field.errors }}</div>
+            {% endif %}
+            {% if field.help_text %}
+                <small class="form-text text-muted">{{ field.help_text }}</small>
+            {% endif %}
+        </div>
+        {% endfor %}
+        
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">Guardar Cambios</button>
+            <a href="{% url 'home' %}" class="btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
