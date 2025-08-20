@@ -4,9 +4,20 @@
   <h2 class="titulo-principal">🚴‍♂️ Próximos Recorridos en Bicicleta</h2>
 
   {% if recorridos %}
+    <!-- Controles de filtrado -->
+    <div class="filtros-recorridos" role="group" aria-label="Filtros de recorridos">
+      <button class="btn-filtro activo" data-filter="todos">Todos</button>
+      <button class="btn-filtro" data-filter="proximos">Próximos</button>
+      <button class="btn-filtro" data-filter="realizados">Realizados</button>
+    </div>
+
     <div class="grid-recorridos" aria-label="Lista de próximos recorridos">
       {% for recorrido in recorridos %}
-        <article class="card-recorrido" tabindex="0" aria-label="Recorrido en {{ recorrido.ciudad }}">
+        <article 
+          class="card-recorrido {% if recorrido.realizado %}realizado{% else %}proximo{% endif %}" 
+          tabindex="0" 
+          aria-label="Recorrido en {{ recorrido.ciudad }}">
+          
           {% if recorrido.foto %}
             <img src="{{ recorrido.foto.url }}" alt="Imagen del recorrido en {{ recorrido.ciudad }}" class="img-recorrido">
           {% else %}
@@ -14,19 +25,22 @@
               Sin imagen
             </div>
           {% endif %}
+
           <div class="etiqueta-estado">
-            {% if recorrido.fecha < today %}
-              Evento Finalizado
+            {% if recorrido.realizado %}
+              Evento Ya Realizado
             {% else %}
               Próximo Evento
             {% endif %}
           </div>
+
           <div class="contenido">
             <h3>{{ recorrido.ciudad }}</h3>
             <p><strong>📅 Fecha:</strong> {{ recorrido.fecha|date:"d M Y" }}</p>
             <p><strong>📍 Distancia:</strong> {{ recorrido.km }} km</p>
             <p><strong>💲 Costo:</strong> ${{ recorrido.costo }}</p>
           </div>
+
           <a class="btn-principal" href="{% url 'recorridos:detalle' recorrido.id %}" aria-label="Ver detalle del recorrido en {{ recorrido.ciudad }}">
             🔍 Ver Detalle
           </a>
@@ -36,6 +50,11 @@
   {% else %}
     <p class="sin-recorridos">No hay recorridos disponibles por el momento.</p>
   {% endif %}
+
+  <!-- Botón flotante para volver arriba -->
+  <button class="floating-btn floating-to-top" title="Volver arriba" style="display: none;">
+    <span>↑</span>
+  </button>
 {% endblock %}
 
 {% block extra_style %}
@@ -61,6 +80,36 @@
     font-size: 2.8rem;
     letter-spacing: 0.06em;
     text-shadow: 1px 1px 3px var(--sombra-suave);
+  }
+
+  /* BOTONES DE FILTRO */
+  .filtros-recorridos {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 35px;
+  }
+
+  .btn-filtro {
+    background-color: var(--color-gris-medio);
+    color: var(--color-gris-oscuro);
+    font-weight: 700;
+    padding: 10px 24px;
+    border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  .btn-filtro:hover {
+    background-color: var(--color-verde);
+    color: var(--color-blanco);
+  }
+
+  .btn-filtro.activo {
+    background-color: var(--color-verde);
+    color: var(--color-blanco);
   }
 
   .grid-recorridos {
@@ -188,6 +237,38 @@
     margin-top: 40px;
   }
 
+  /* Estilos para botón flotante */
+  .floating-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    font-size: 24px;
+    font-weight: bold;
+    z-index: 999;
+    background-color: var(--color-verde);
+    color: var(--color-blanco);
+  }
+
+  .floating-btn:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    background-color: var(--color-verde-oscuro);
+  }
+
+  .floating-btn:active {
+    transform: translateY(0) scale(0.98);
+  }
+
   @media (max-width: 700px) {
     .grid-recorridos {
       grid-template-columns: 1fr;
@@ -214,6 +295,60 @@
       font-size: 1rem;
       padding: 10px 28px;
     }
+
+    /* Responsive para botón flotante */
+    .floating-btn {
+      width: 50px;
+      height: 50px;
+      font-size: 20px;
+      bottom: 20px;
+      right: 20px;
+    }
   }
 </style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const botones = document.querySelectorAll(".btn-filtro");
+    const cards = document.querySelectorAll(".card-recorrido");
+
+    botones.forEach(boton => {
+      boton.addEventListener("click", () => {
+        botones.forEach(b => b.classList.remove("activo"));
+        boton.classList.add("activo");
+        const filtro = boton.dataset.filter;
+
+        cards.forEach(card => {
+          if (filtro === "todos") {
+            card.style.display = "flex";
+          } else if (filtro === "proximos") {
+            card.style.display = card.classList.contains("proximo") ? "flex" : "none";
+          } else if (filtro === "realizados") {
+            card.style.display = card.classList.contains("realizado") ? "flex" : "none";
+          }
+        });
+      });
+    });
+
+    // Funcionalidad para el botón de volver arriba
+    const floatingToTop = document.querySelector('.floating-to-top');
+    
+    // Mostrar/ocultar botón según la posición de scroll
+    window.addEventListener('scroll', function() {
+      if (window.scrollY > 300) {
+        floatingToTop.style.display = 'flex';
+      } else {
+        floatingToTop.style.display = 'none';
+      }
+    });
+    
+    // Scroll suave al hacer clic en el botón
+    floatingToTop.addEventListener('click', function() {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
+  });
+</script>
 {% endblock %}

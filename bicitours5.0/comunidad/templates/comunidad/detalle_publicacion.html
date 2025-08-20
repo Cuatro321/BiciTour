@@ -1,22 +1,11 @@
 {% extends "comunidad/base_comunidad.html" %}
 
 {% block comunidad_content %}
-{% if user.is_authenticated %}
-<div class="action-buttons">
-    <a href="{% url 'comunidad:lista_publicaciones' %}" class="btn-back">
-        <span class="icon-arrow">↩</span> Volver a Publicaciones
-    </a>
-    <a href="{% url 'comunidad:nueva_publicacion' %}" class="btn-new-post">
-        <span class="icon-plus"></span> Crear Nueva Publicación
-    </a>
-</div>
-{% else %}
 <div class="action-buttons">
     <a href="{% url 'comunidad:lista_publicaciones' %}" class="btn-back">
         <span class="icon-arrow">↩</span> Volver a Publicaciones
     </a>
 </div>
-{% endif %}
 
 <div class="publicacion-card">
     <div class="publicacion-header">
@@ -27,7 +16,7 @@
             <span class="publicacion-user">{{ publicacion.usuario.username }}</span>
             <span class="publicacion-date">{{ publicacion.fecha_publicacion|date:"d M Y, H:i" }}</span>
         </div>
-        
+
         {% if publicacion.usuario == user or user.is_staff %}
         <form action="{% url 'comunidad:eliminar_publicacion' publicacion.pk %}" method="post" class="delete-form">
             {% csrf_token %}
@@ -35,21 +24,21 @@
         </form>
         {% endif %}
     </div>
-    
+
     <div class="publicacion-body">
         <h2 class="publicacion-title">{{ publicacion.titulo }}</h2>
-        
+
         <a href="{% url 'recorridos:detalle' publicacion.recorrido.pk %}" class="publicacion-receta">
           Recorrido: {{ publicacion.recorrido.ciudad }}
         </a>
-        
+
         <p class="publicacion-content">{{ publicacion.contenido }}</p>
-        
+
         {% if publicacion.fotos.exists %}
         <div class="publicacion-fotos">
             {% for foto in publicacion.fotos.all %}
             <div class="foto-container">
-                <img src="{{ foto.imagen.url }}" alt="{{ foto.descripcion }}" class="publicacion-foto">
+                <img src="{{ foto.imagen.url }}" alt="{{ foto.descripcion }}" class="publicacion-foto modal-img" data-descripcion="{{ foto.descripcion }}">
                 {% if foto.descripcion %}
                 <p class="foto-descripcion">{{ foto.descripcion }}</p>
                 {% endif %}
@@ -58,15 +47,13 @@
         </div>
         {% endif %}
     </div>
-    
+
     <div class="publicacion-actions">
-        <form action="{% url 'comunidad:like_publicacion' publicacion.pk %}" method="post" class="like-form">
-            {% csrf_token %}
-            <button type="submit" class="like-btn {% if user in publicacion.likes.all %}liked{% endif %}">
-                ❤️ <span class="like-count">{{ publicacion.likes.count }}</span>
-            </button>
-        </form>
-        
+        <button type="button" class="like-btn {% if user in publicacion.likes.all %}liked{% endif %}">
+            ❤️ <span class="like-count">{{ publicacion.likes.count }}</span>
+            <span class="like-animation">+1</span>
+        </button>
+
         <a href="#comentarios" class="comment-btn">
             💬 <span class="comment-count">{{ publicacion.comentarios.count }}</span>
         </a>
@@ -75,7 +62,7 @@
 
 <div id="comentarios" class="comentarios-section">
     <h3 class="section-title">Comentarios ({{ publicacion.comentarios.count }})</h3>
-    
+
     {% for comentario in publicacion.comentarios.all %}
     <div class="comentario">
         <div class="comentario-header">
@@ -86,7 +73,7 @@
                 <span class="comentario-user">{{ comentario.usuario.username }}</span>
                 <span class="comentario-date">{{ comentario.fecha_comentario|date:"d M Y, H:i" }}</span>
             </div>
-            
+
             {% if comentario.usuario == user or user.is_staff %}
             <form action="{% url 'comunidad:eliminar_comentario' comentario.pk %}" method="post">
                 {% csrf_token %}
@@ -99,7 +86,7 @@
     {% empty %}
     <p style="text-align: center; color: #888;">No hay comentarios aún. ¡Sé el primero en comentar!</p>
     {% endfor %}
-    
+
     {% if user.is_authenticated %}
     <form method="post" action="{% url 'comunidad:agregar_comentario' publicacion.pk %}" class="form-comentario">
         {% csrf_token %}
@@ -120,86 +107,501 @@
     {% endif %}
 </div>
 
+<!-- Botones flotantes -->
+{% if user.is_authenticated %}
+<div class="floating-buttons">
+    <a href="{% url 'comunidad:nueva_publicacion' %}" class="floating-btn floating-new-post" title="Crear nueva publicación">
+        <span>+</span>
+    </a>
+    
+    <button class="floating-btn floating-to-top" title="Volver arriba" style="display: none;">
+        <span>↑</span>
+    </button>
+</div>
+{% endif %}
+
+<!-- Modal de imagen mejorado -->
+<div id="imageModal" class="modal">
+    <div class="modal-container">
+        <span class="modal-close">&times;</span>
+        <div class="modal-navigation">
+            <button class="modal-nav-btn modal-prev-btn" aria-label="Imagen anterior">&#10094;</button>
+            <div class="modal-content-container">
+                <img class="modal-content" id="modalImage">
+                <div class="modal-loader"></div>
+            </div>
+            <button class="modal-nav-btn modal-next-btn" aria-label="Siguiente imagen">&#10095;</button>
+        </div>
+        <div class="modal-info">
+            <div class="modal-user-info">
+                {% if publicacion.usuario.perfil.foto %}
+                <img src="{{ publicacion.usuario.perfil.foto.url }}" alt="{{ publicacion.usuario.username }}" class="modal-user-avatar">
+                {% endif %}
+                <span class="modal-username">{{ publicacion.usuario.username }}</span>
+            </div>
+            <div class="modal-actions">
+                <button type="button" id="modal-like-btn" class="like-btn">
+                    ❤️ <span id="modal-like-count">0</span>
+                    <span class="like-animation">+1</span>
+                </button>
+                <span class="modal-foto-descripcion"></span>
+                <span class="modal-foto-date">{{ publicacion.fecha_publicacion|date:"d M Y, H:i" }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
-    /* Estilos para fotos de perfil */
-    .user-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        object-fit: cover;
-        margin-right: 10px;
+/* Estilos base (mantenidos) */
+.user-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 10px; }
+.publicacion-header { display: flex; align-items: center; padding: 10px 15px; }
+.user-info { display: flex; flex-direction: column; }
+.publicacion-user { font-weight: 600; color: #01708b; }
+.publicacion-date { font-size: 0.8rem; color: #666; }
+.delete-publicacion { background: none; border: none; color: #dc3545; cursor: pointer; font-size: 1rem; padding: 5px; }
+.publicacion-card { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; overflow: hidden; }
+.publicacion-body { padding: 0 15px 15px; }
+.publicacion-title { color: #2c2c2c; margin-top: 5px; margin-bottom: 10px; }
+.publicacion-receta { display: block; color: #01a699; margin-bottom: 10px; font-size: 0.9rem; }
+.publicacion-content { color: #333; margin-bottom: 15px; line-height: 1.5; }
+.publicacion-fotos { display: flex; gap: 10px; margin-top: 15px; }
+.publicacion-foto { max-width: 150px; max-height: 150px; border-radius: 4px; object-fit: cover; cursor: pointer; transition: transform 0.2s; }
+.publicacion-foto:hover { transform: scale(1.05); }
+.publicacion-actions { display: flex; padding: 10px 15px; border-top: 1px solid #eee; gap: 15px; }
+.like-btn, .comment-btn { background: none; border: none; color: #666; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 0.9rem; position: relative; }
+.like-btn.liked { color: #dc3545; }
+.like-animation { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-weight: 800; color: #dc3545; opacity: 0; transition: all 0.6s ease-out; pointer-events: none; }
+.empty-state { text-align: center; padding: 30px; color: #666; }
+.login-link { color: #01a699; text-decoration: none; font-weight: 600; }
+.btn-new-post { display: inline-block; background-color: #01a699; color: white; padding: 10px 20px; border-radius: 20px; text-decoration: none; margin-bottom: 20px; font-weight: 600; }
+.btn-new-post:hover { background-color: #018575; }
+
+/* Estilos para botones flotantes */
+.floating-buttons {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.floating-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    border: none;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.floating-new-post {
+    background-color: #01a699;
+    color: white;
+}
+
+.floating-to-top {
+    background-color: #01708b;
+    color: white;
+}
+
+.floating-btn:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+.floating-btn:active {
+    transform: translateY(0) scale(0.98);
+}
+
+/* Estilos mejorados para el modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    overflow: auto;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.modal.show {
+    opacity: 1;
+}
+
+.modal-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.modal-close {
+    position: absolute;
+    top: 25px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 10;
+    transition: 0.3s;
+}
+
+.modal-close:hover {
+    color: #bbb;
+}
+
+.modal-navigation {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 1;
+    position: relative;
+}
+
+.modal-nav-btn {
+    color: white;
+    font-size: 40px;
+    cursor: pointer;
+    padding: 20px;
+    user-select: none;
+    background: rgba(0, 0, 0, 0.3);
+    border: none;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s;
+    z-index: 10;
+}
+
+.modal-nav-btn:hover {
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.modal-content-container {
+    position: relative;
+    max-width: 80%;
+    max-height: 80vh;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    max-width: 100%;
+    max-height: 80vh;
+    object-fit: contain;
+    border-radius: 8px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.modal-content.loaded {
+    opacity: 1;
+}
+
+.modal-loader {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #01a699;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    display: none;
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.modal-info {
+    color: white;
+    padding: 15px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 80%;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.modal-user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.modal-user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.modal-username {
+    font-weight: 600;
+}
+
+.modal-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.modal-foto-descripcion {
+    font-size: 0.9rem;
+    color: #ddd;
+    max-width: 300px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.modal-foto-date {
+    font-size: 0.8rem;
+    color: #aaa;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .modal-content-container {
+        max-width: 95%;
     }
 
-    /* Encabezados mejor alineados */
-    .publicacion-header,
-    .comentario-header {
-        display: flex;
-        align-items: center;
-        margin-bottom: 10px;
-    }
-
-    .user-info {
-        flex-grow: 1;
-    }
-
-    /* Formulario de comentario mejorado */
-    .form-comentario {
-        margin-top: 20px;
-    }
-
-    .comment-input-wrapper {
-        display: flex;
-        gap: 10px;
-    }
-
-    .comment-input-container {
-        flex-grow: 1;
-        display: flex;
+    .modal-info {
         flex-direction: column;
+        align-items: flex-start;
         gap: 10px;
     }
 
-    .textarea-comentario {
+    .modal-actions {
         width: 100%;
-        padding: 12px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        min-height: 80px;
-        resize: vertical;
-        font-family: inherit;
+        justify-content: space-between;
     }
 
-    .btn-submit {
-        align-self: flex-end;
-        background-color: #01a699;
-        color: white;
-        border: none;
-        padding: 8px 20px;
-        border-radius: 20px;
-        cursor: pointer;
-        transition: background-color 0.3s;
+    .modal-nav-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 30px;
     }
-
-    .btn-submit:hover {
-        background-color: #018575;
+    
+    /* Responsive para botones flotantes */
+    .floating-buttons {
+        bottom: 20px;
+        right: 20px;
     }
-
-    /* Botones de eliminar */
-    .delete-publicacion,
-    .delete-comment {
-        background: none;
-        border: none;
-        cursor: pointer;
-        font-size: 1rem;
-        color: #dc3545;
-        padding: 0;
-        margin-left: 10px;
+    
+    .floating-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
     }
-
-    /* Contenido de comentarios */
-    .comentario-content {
-        margin-left: 50px;
-        padding: 5px 0;
-    }
+}
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Modal de imágenes
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImage');
+    const modalClose = document.querySelector('.modal-close');
+    const modalLikeBtn = document.getElementById('modal-like-btn');
+    const modalLikeCount = document.getElementById('modal-like-count');
+    const modalLoader = document.querySelector('.modal-loader');
+    const modalDescripcion = document.querySelector('.modal-foto-descripcion');
+    const prevBtn = document.querySelector('.modal-prev-btn');
+    const nextBtn = document.querySelector('.modal-next-btn');
+
+    let currentCard = null;
+    let currentFotoIndex = 0;
+    let fotosArray = [];
+
+    // Abrir modal al hacer clic en la imagen
+    document.querySelectorAll('.publicacion-foto').forEach(img => {
+        img.addEventListener('click', function() {
+            currentCard = this.closest('.publicacion-card');
+
+            // Obtener todas las fotos de la publicación
+            fotosArray = Array.from(currentCard.querySelectorAll('.publicacion-foto'));
+            currentFotoIndex = fotosArray.findIndex(foto => foto === this);
+
+            openModal(this);
+        });
+    });
+
+    function openModal(imgElement) {
+        // Mostrar loader mientras carga la imagen
+        modalLoader.style.display = 'block';
+        modalImg.classList.remove('loaded');
+
+        // Configurar la imagen en el modal
+        modalImg.onload = function() {
+            modalLoader.style.display = 'none';
+            modalImg.classList.add('loaded');
+            updateModalInfo();
+        };
+
+        modalImg.src = imgElement.src;
+        modal.style.display = "flex";
+        setTimeout(() => modal.classList.add('show'), 10);
+
+        // Actualizar likes
+        const likes = currentCard.querySelector('.like-count').textContent;
+        modalLikeCount.textContent = likes;
+
+        // Configurar el estado del botón like
+        const isLiked = currentCard.querySelector('.like-btn').classList.contains('liked');
+        modalLikeBtn.classList.toggle('liked', isLiked);
+
+        // Mostrar descripción si existe
+        const descripcion = imgElement.dataset.descripcion;
+        modalDescripcion.textContent = descripcion || "";
+
+        // Bloquear scroll del body
+        document.body.style.overflow = 'hidden';
+    }
+
+    function updateModalInfo() {
+        const currentFoto = fotosArray[currentFotoIndex];
+        const descripcion = currentFoto.dataset.descripcion;
+        modalDescripcion.textContent = descripcion || "";
+    }
+
+    function navigateFoto(direction) {
+        currentFotoIndex += direction;
+
+        // Circular navigation
+        if (currentFotoIndex < 0) {
+            currentFotoIndex = fotosArray.length - 1;
+        } else if (currentFotoIndex >= fotosArray.length) {
+            currentFotoIndex = 0;
+        }
+
+        openModal(fotosArray[currentFotoIndex]);
+    }
+
+    // Event listeners para el modal
+    modalClose.onclick = function() {
+        modal.classList.remove('show');
+        setTimeout(() => {
+            modal.style.display = "none";
+            document.body.style.overflow = 'auto';
+        }, 300);
+    }
+
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.style.display = "none";
+                document.body.style.overflow = 'auto';
+            }, 300);
+        }
+    }
+
+    prevBtn.onclick = function(e) {
+        e.stopPropagation();
+        navigateFoto(-1);
+    }
+
+    nextBtn.onclick = function(e) {
+        e.stopPropagation();
+        navigateFoto(1);
+    }
+
+    // Navegación con teclado
+    document.addEventListener('keydown', function(e) {
+        if (modal.style.display === "flex") {
+            if (e.key === 'Escape') {
+                modalClose.click();
+            } else if (e.key === 'ArrowLeft') {
+                navigateFoto(-1);
+            } else if (e.key === 'ArrowRight') {
+                navigateFoto(1);
+            }
+        }
+    });
+
+    // Likes para publicaciones
+    function animateLike(button, countSpan, animationSpan, increment) {
+        let count = parseInt(countSpan.textContent);
+        count += increment;
+        countSpan.textContent = count;
+        animationSpan.textContent = increment > 0 ? '+1' : '-1';
+        animationSpan.style.opacity = 1;
+        animationSpan.style.transform = 'translateY(-20px)';
+        setTimeout(() => {
+            animationSpan.style.opacity = 0;
+            animationSpan.style.transform = 'translateY(0)';
+        }, 600);
+    }
+
+    // Like en publicación principal
+    document.querySelectorAll('.like-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const countSpan = this.querySelector('.like-count');
+            const animationSpan = this.querySelector('.like-animation');
+            const increment = this.classList.contains('liked') ? -1 : 1;
+            animateLike(this, countSpan, animationSpan, increment);
+            this.classList.toggle('liked');
+        });
+    });
+
+    // Like en modal
+    modalLikeBtn.addEventListener('click', function() {
+        if (!currentCard) return;
+        const mainLikeBtn = currentCard.querySelector('.like-btn');
+        const increment = mainLikeBtn.classList.contains('liked') ? -1 : 1;
+        animateLike(mainLikeBtn, mainLikeBtn.querySelector('.like-count'), mainLikeBtn.querySelector('.like-animation'), increment);
+        mainLikeBtn.classList.toggle('liked');
+        modalLikeCount.textContent = mainLikeBtn.querySelector('.like-count').textContent;
+        this.classList.toggle('liked');
+    });
+
+    // Funcionalidad para el botón de volver arriba
+    const floatingToTop = document.querySelector('.floating-to-top');
+    
+    // Mostrar/ocultar botón según la posición de scroll
+    window.addEventListener('scroll', function() {
+        if (window.scrollY > 300) {
+            floatingToTop.style.display = 'flex';
+        } else {
+            floatingToTop.style.display = 'none';
+        }
+    });
+    
+    // Scroll suave al hacer clic en el botón
+    floatingToTop.addEventListener('click', function() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
+});
+</script>
 {% endblock %}

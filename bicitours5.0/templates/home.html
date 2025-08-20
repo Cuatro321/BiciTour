@@ -4,476 +4,666 @@
 <head>
   <meta charset="UTF-8" />
   <title>{% block title %}BikeRoutes MX{% endblock %}</title>
-  <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="BikeRoutes MX: Explora México en bicicleta. Descubre recorridos, inscríbete a eventos, compra mercancía y comparte en nuestra comunidad ciclista.">
+
+  <!-- Preload Google Fonts con swap -->
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+  </noscript>
+
+  <!-- Bootstrap diferido -->
+  <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" media="print" onload="this.media='all'">
+
   <style>
     :root {
-      --primario: #027c8f;
-      --secundario: #00c381;
-      --verde: #01a699;
-      --verde-oscuro: #018575;
-      --azul: #01708b;
+      --primario: #005f6b;
+      --secundario: #009973;
+      --verde: #018575;
+      --verde-oscuro: #015f5f;
       --gris-claro: #f5f5f5;
-      --gris-medio: #ddd;
-      --gris-oscuro: #2c2c2c;
-      --blanco: #ffffff;
-      --sombra: rgba(0, 0, 0, 0.05);
+      --gris-oscuro: #222;
+      --blanco: #fff;
+      --sombra: rgba(0,0,0,0.05);
       --menu-bg: #2c3e50;
       --menu-texto: #ecf0f1;
-      --menu-hover: #34495e;
+      --menu-hover: #1f2d3d;
       --admin-color: #d63384;
     }
 
-    body {
-      font-family: 'Poppins', sans-serif;
-      background-color: var(--gris-claro);
-      color: var(--gris-oscuro);
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      margin: 0;
-    }
+    body { font-family: 'Poppins', sans-serif; margin:0; min-height:100vh; display:flex; flex-direction:column; background: var(--gris-claro); color: var(--gris-oscuro); }
 
-    .site-header {
-      background-color: var(--primario);
-      padding: 18px 40px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      box-shadow: 0 4px 10px var(--sombra);
-      position: relative;
-      z-index: 1000; /* Asegura que el header esté por encima */
-    }
-
-    .site-header .logo {
-      font-size: 1.9rem;
-      font-weight: 800;
-      color: var(--blanco);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .site-header .logo::before {
-      content: "🚴";
-      font-size: 1.5rem;
-      margin: 0;
-    }
-
-    .site-header nav {
-      display: flex;
-      gap: 18px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    .site-header nav a {
-      color: var(--blanco);
+    .site-header { background: var(--primario); padding: 18px 40px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; box-shadow:0 4px 10px var(--sombra);}
+    .site-header .logo { 
+      font-size:1.9rem; 
+      font-weight:800; 
+      color: var(--blanco); 
+      display:flex; 
+      align-items:center; 
+      gap:6px;
       text-decoration: none;
-      font-weight: 600;
-      font-size: 1rem;
-      padding: 8px 14px;
-      border-radius: 8px;
-      transition: all 0.2s ease;
-      background: rgba(255,255,255,0.05);
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+    .site-header .logo:hover {
+      transform: scale(1.05);
+    }
+    .site-header .logo::before { content:"🚴"; font-size:1.5rem; }
+    .site-header nav { display:flex; gap:18px; flex-wrap:wrap; align-items:center; }
+    .site-header nav a { color: var(--blanco); text-decoration:none; font-weight:600; font-size:1rem; padding:8px 14px; border-radius:8px; transition: all 0.2s ease; background: rgba(255,255,255,0.1);}
+    .site-header nav a:hover { background-color: var(--secundario); color:var(--blanco); }
+
+    .user-menu { position:relative; display:inline-block; }
+    .user-avatar { width:36px;height:36px;border-radius:50%;object-fit:cover;margin-right:8px;border:2px solid var(--blanco);}
+    .dropdown-content { display:none; position:absolute; right:0; background-color: var(--menu-bg); min-width:200px; box-shadow:0 8px 16px rgba(0,0,0,0.3); z-index:1; border-radius:8px; overflow:hidden; margin-top:5px;}
+    .user-menu.active .dropdown-content { display:block; }
+    .dropdown-item { color: var(--menu-texto); padding:12px 16px; display:block; font-size:.95rem; border-bottom:1px solid rgba(255,255,255,.1); background:none; border:none; width:100%; text-align:left; cursor:pointer; transition: all 0.3s ease; }
+    .dropdown-item:hover { background-color: var(--menu-hover); padding-left:20px; }
+
+    .avatar-placeholder { width:36px;height:36px;border-radius:50%;background:var(--gris-claro);display:flex;align-items:center;justify-content:center; }
+    .user-menu-container { display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--blanco);padding:8px 14px;border-radius:8px;background:rgba(255,255,255,.1); transition:all 0.2s ease;}
+    .user-menu-container:hover { background-color: var(--secundario); }
+
+    main { flex-grow:1; padding:30px 15px; max-width:1200px; margin:0 auto; width:100%; box-sizing:border-box; }
+    .site-footer { background-color: var(--primario); color:white; text-align:center; padding:16px 20px; font-size:.9rem; margin-top:auto; width:100%; }
+
+    /* Banner Hero */
+    .hero-banner { 
+      position:relative; 
+      width:100%; 
+      max-width:1200px; 
+      min-height:70vh; 
+      display:flex; 
+      justify-content:center; 
+      align-items:center; 
+      overflow:hidden; 
+      margin:30px auto; 
+      border-radius:16px; 
+      box-shadow:0 8px 24px rgba(0,0,0,.2); 
+      color: var(--blanco); 
+      padding:0 30px; 
+      box-sizing:border-box; 
+    }
+    .hero-overlay { 
+      position:absolute; 
+      inset:0; 
+      background: linear-gradient(45deg, rgba(0,95,107,0.7) 0%, rgba(0,153,115,0.7) 100%);
+      z-index:1; 
+      border-radius:16px; 
+      opacity: 0.85;
+    }
+    .hero-contenido { 
+      position:relative; 
+      max-width:695px; 
+      width:100%; 
+      text-align:center; 
+      z-index:2; 
+      opacity: 0;
+      transform: translateY(30px);
+      animation: fadeInUp 2s ease forwards 0.5s; /* Animación más lenta */
+    }
+    .hero-contenido h1 { 
+      font-weight:800; 
+      font-size:3.8rem; 
+      margin-bottom:16px; 
+      text-shadow:2px 2px 8px rgba(0,0,0,.8); 
+      letter-spacing:.1em;
+      animation: pulse 4s infinite 2.5s; /* Animación más lenta */
+    }
+    .hero-contenido p { 
+      font-weight:600; 
+      font-size:1.5rem; 
+      margin-bottom:32px; 
+      text-shadow:1px 1px 6px rgba(0,0,0,.7);
+    }
+    .btn-hero { 
+      font-weight:900; 
+      font-size:1.3rem; 
+      padding:16px 56px; 
+      border-radius:40px; 
+      background-color:var(--verde); 
+      color:var(--blanco); 
+      text-decoration:none; 
+      box-shadow:0 10px 32px rgba(1,133,117,.7); 
+      transition: all 0.4s ease; 
+      display:inline-block; 
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+    }
+    .btn-hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: 0.5s;
+      z-index: -1;
+    }
+    .btn-hero:hover::before {
+      left: 100%;
+    }
+    .btn-hero:hover, .btn-hero:focus { 
+      background-color: var(--verde-oscuro); 
+      box-shadow:0 14px 48px rgba(1,95,95,.9); 
+      transform: translateY(-3px);
+      outline:none; 
     }
 
-    .site-header nav a:hover {
-      background-color: var(--secundario);
-      color: var(--blanco);
+    /* Efecto de partículas */
+    .particles {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      overflow: hidden;
+      border-radius: 16px;
+    }
+    
+    .particle {
+      position: absolute;
+      background-color: rgba(255, 255, 255, 0.5);
+      border-radius: 50%;
+      animation: floatParticle 15s infinite linear;
     }
 
-    /* Menú de usuario */
-    .user-menu {
-        position: relative;
-        display: inline-block;
-        z-index: 1001; /* Mayor que el header */
-    }
-
-    .user-avatar {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        object-fit: cover;
-        margin-right: 8px;
-        border: 2px solid var(--blanco);
-    }
-
-    .dropdown-content {
-        display: none;
-        position: absolute;
-        right: 0;
-        background-color: var(--menu-bg);
-        min-width: 200px;
-        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-        z-index: 1002; /* Mayor que el menú y el header */
-        border-radius: 8px;
-        overflow: hidden;
-        margin-top: 5px;
-    }
-
-    .user-menu.active .dropdown-content {
-        display: block;
-    }
-
-    .dropdown-item {
-        color: var(--menu-texto);
-        padding: 12px 16px;
-        text-decoration: none;
-        display: block;
-        transition: all 0.3s ease;
-        font-family: 'Poppins', sans-serif;
-        font-size: 0.95rem;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
-        background: none;
-        border: none;
-        width: 100%;
-        text-align: left;
-        cursor: pointer;
-    }
-
-    .dropdown-item:last-child {
-        border-bottom: none;
-    }
-
-    .dropdown-item:hover {
-        background-color: var(--menu-hover);
-        color: var(--blanco);
-        padding-left: 20px;
-    }
-
-    .dropdown-item svg {
-        margin-right: 10px;
-        width: 16px;
-        height: 16px;
-        vertical-align: middle;
-    }
-
-    .avatar-placeholder {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        background: var(--gris-claro);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .user-menu-container {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        cursor: pointer;
-        color: var(--blanco);
-        padding: 8px 14px;
-        border-radius: 8px;
-        transition: all 0.2s ease;
-        background: rgba(255,255,255,0.05);
-    }
-
-    .user-menu-container:hover {
-        background-color: var(--secundario);
-    }
-
-    main {
-      flex-grow: 1;
-      padding: 30px 15px;
+    /* Sección de características */
+    .features-section {
+      padding: 60px 0;
       max-width: 1200px;
       margin: 0 auto;
       width: 100%;
-      box-sizing: border-box;
-      position: relative;
-      z-index: 1; /* Menor que el header y menú */
     }
-
-    .site-footer {
-      background-color: var(--primario);
-      color: white;
+    
+    .section-title {
       text-align: center;
-      padding: 16px 20px;
-      font-size: 0.9rem;
-      margin-top: auto;
-      width: 100%;
-      position: relative;
-      z-index: 1; /* Menor que el header y menú */
-    }
-
-    /* Banner hero */
-    .hero-banner {
-      position: relative;
-      width: 100%;
-      max-width: 1200px;
-      min-height: 70vh;
-      background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      overflow: hidden;
-      margin: 30px auto;
-      border-radius: 16px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-      color: var(--blanco);
-      text-shadow: 0 2px 8px rgba(0,0,0,0.7);
-      padding: 0 30px;
-      box-sizing: border-box;
-      z-index: 1; /* Menor que el header y menú */
-    }
-
-    .hero-overlay {
-      position: absolute;
-      inset: 0;
-      background: rgba(1, 103, 134, 0.7);
-      z-index: 1;
-      border-radius: 16px;
-    }
-
-    .hero-contenido {
-      position: relative;
-      max-width: 695px;
-      width: 100%;
-      color: white;
-      text-align: center;
-      z-index: 2;
-    }
-
-    .hero-contenido h1 {
-      font-family: 'Poppins', sans-serif;
+      font-size: 2.5rem;
       font-weight: 800;
-      font-size: 3.8rem;
-      margin-bottom: 16px;
-      text-shadow: 2px 2px 6px rgba(0,0,0,0.7);
-      letter-spacing: 0.1em;
-    }
-
-    .hero-contenido p {
-      font-family: 'Poppins', sans-serif;
-      font-weight: 600;
-      font-size: 1.5rem;
-      margin-bottom: 32px;
-      text-shadow: 1px 1px 4px rgba(0,0,0,0.6);
-    }
-
-    .btn-hero {
-      font-family: 'Poppins', sans-serif;
-      background-color: var(--verde);
-      color: var(--blanco);
-      font-weight: 900;
-      font-size: 1.3rem;
-      padding: 16px 56px;
-      border-radius: 40px;
-      text-decoration: none;
-      box-shadow: 0 10px 32px rgba(1,166,153,0.6);
-      transition: background-color 0.3s ease, box-shadow 0.3s ease;
-      display: inline-block;
-    }
-
-    .btn-hero:hover,
-    .btn-hero:focus {
-      background-color: var(--verde-oscuro);
-      box-shadow: 0 14px 48px rgba(1,133,117,0.8);
-      outline: none;
-    }
-
-    /* Mensajes flash */
-    .messages {
-      max-width: 900px;
-      margin: 20px auto;
-      padding: 12px 18px;
-      border-radius: 8px;
-      background-color: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
-      font-weight: 600;
+      color: var(--primario);
+      margin-bottom: 50px;
       position: relative;
-      z-index: 1;
     }
-
-    @media (max-width: 992px) {
-      .hero-contenido h1 {
-        font-size: 2.8rem;
-      }
-      .hero-contenido p {
-        font-size: 1.2rem;
-        margin-bottom: 24px;
-      }
-      .btn-hero {
-        font-size: 1.1rem;
-        padding: 14px 48px;
-      }
+    
+    .section-title::after {
+      content: '';
+      display: block;
+      width: 80px;
+      height: 4px;
+      background: var(--secundario);
+      margin: 15px auto 0;
+      border-radius: 2px;
     }
-
-    @media (max-width: 768px) {
-      .site-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-      }
-
-      .site-header nav {
-        width: 100%;
-        justify-content: flex-start;
-        gap: 12px;
-      }
-
-      .site-header .logo {
-        font-size: 1.6rem;
-      }
-
-      .dropdown-content {
-          right: auto;
-          left: 0;
-      }
+    
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      margin-bottom: 60px;
     }
-
-    @media (max-width: 576px) {
-      .hero-banner {
-        min-height: 50vh;
-        padding: 0 15px;
-      }
-      .hero-contenido h1 {
-        font-size: 2rem;
-      }
-      .hero-contenido p {
-        font-size: 1rem;
-        margin-bottom: 18px;
-      }
-      .btn-hero {
-        font-size: 1rem;
-        padding: 12px 36px;
-      }
+    
+    .feature-card {
+      background: var(--blanco);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      text-align: center;
+      padding: 30px 20px;
     }
-      .admin-btn {
-      background-color: var(--admin-color);
+    
+    .feature-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+    }
+    
+    .feature-icon {
+      font-size: 3.5rem;
+      margin-bottom: 20px;
+      display: block;
+    }
+    
+    .feature-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primario);
+      margin-bottom: 15px;
+    }
+    
+    .feature-desc {
+      color: var(--gris-oscuro);
+      line-height: 1.6;
+    }
+    
+    /* Sección de próximos eventos */
+    .events-section {
+      background: linear-gradient(to right, var(--primario), var(--secundario));
+      padding: 60px 20px;
+      border-radius: 16px;
+      margin: 40px 0;
       color: var(--blanco);
     }
-
-    .admin-btn:hover {
-      background-color: #a52d6b;
-      color: var(--blanco);
+    
+    .events-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 25px;
+      margin-top: 40px;
     }
+    
+    .event-card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      padding: 25px;
+      transition: transform 0.3s ease;
+    }
+    
+    .event-card:hover {
+      transform: scale(1.03);
+    }
+    
+    .event-date {
+      background: var(--blanco);
+      color: var(--primario);
+      font-weight: 700;
+      padding: 8px 15px;
+      border-radius: 20px;
+      display: inline-block;
+      margin-bottom: 15px;
+    }
+    
+    .event-title {
+      font-size: 1.4rem;
+      margin-bottom: 10px;
+    }
+    
+    .event-desc {
+      opacity: 0.9;
+      margin-bottom: 15px;
+    }
+    
+    .event-link {
+      color: var(--blanco);
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+    }
+    
+    .event-link:hover {
+      text-decoration: underline;
+    }
+    
+    /* Sección de testimonios */
+    .testimonials-section {
+      padding: 60px 0;
+    }
+    
+    .testimonials-container {
+      display: flex;
+      gap: 30px;
+      overflow-x: auto;
+      padding: 20px 0;
+      scrollbar-width: thin;
+    }
+    
+    .testimonial-card {
+      flex: 0 0 350px;
+      background: var(--blanco);
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    
+    .testimonial-text {
+      font-style: italic;
+      margin-bottom: 20px;
+      position: relative;
+      padding-left: 25px;
+    }
+    
+    .testimonial-text::before {
+      content: """;
+      font-size: 4rem;
+      color: var(--secundario);
+      position: absolute;
+      left: -15px;
+      top: -20px;
+      opacity: 0.3;
+    }
+    
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+    }
+    
+    .testimonial-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 15px;
+    }
+    
+    .author-name {
+      font-weight: 700;
+      color: var(--primario);
+    }
+    
+    .author-role {
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
+
+    .messages { max-width:900px; margin:20px auto; padding:12px 18px; border-radius:8px; background-color:#d4edda; color:#155724; border:1px solid #c3e6cb; font-weight:600; }
+
+    /* Animaciones clave */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.05);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+    
+    @keyframes floatParticle {
+      0% {
+        transform: translateY(100vh) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-100px) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    @media(max-width:992px){ 
+      .hero-contenido h1{font-size:2.8rem} 
+      .hero-contenido p{font-size:1.2rem;margin-bottom:24px} 
+      .btn-hero{font-size:1.1rem;padding:14px 48px} 
+      .section-title {
+        font-size: 2.2rem;
+      }
+    }
+    @media(max-width:768px){ 
+      .site-header{flex-direction:column;align-items:flex-start;gap:10px} 
+      .site-header nav{width:100%;justify-content:flex-start;gap:12px} 
+      .site-header .logo{font-size:1.6rem} 
+      .dropdown-content{right:auto;left:0} 
+      .features-grid,
+      .events-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    @media(max-width:576px){ 
+      .hero-banner{min-height:50vh;padding:0 15px} 
+      .hero-contenido h1{font-size:2rem} 
+      .hero-contenido p{font-size:1rem;margin-bottom:18px} 
+      .btn-hero{font-size:1rem;padding:12px 36px} 
+      .section-title {
+        font-size: 1.8rem;
+      }
+      .feature-card {
+        padding: 20px 15px;
+      }
+    }
+
+    .admin-btn { background-color:var(--admin-color); color:var(--blanco); }
+    .admin-btn:hover{ background-color:#a52d6b; color:var(--blanco); }
   </style>
 
   {% block extra_style %}{% endblock %}
 </head>
 <body>
 
-   <header class="site-header">
-    <div class="logo">BikeRoutes MX</div>
-    <nav>
-      <a href="{% url 'home' %}">Inicio</a>
-      <a href="{% url 'recorridos:lista' %}">Recorridos</a>
-      <a href="{% url 'inscripciones:nueva' %}">Inscripción</a>
-      <a href="{% url 'mercancia:lista' %}">Catálogo</a>
-      <a href="{% url 'comunidad:lista_publicaciones' %}">Comunidad</a>
+<header class="site-header" role="banner">
+  <!-- Logo convertido en enlace a inicio -->
+  <a href="{% url 'home' %}" class="logo">BikeRoutes MX</a>
+  <nav role="navigation" aria-label="Menú principal">
+    <a href="{% url 'home' %}">Inicio</a>
+    <a href="{% url 'recorridos:lista' %}">Recorridos</a>
+    <a href="{% url 'inscripciones:nueva' %}">Inscripción</a>
+    <a href="{% url 'mercancia:lista' %}">Catálogo</a>
+    <a href="{% url 'comunidad:lista_publicaciones' %}">Comunidad</a>
 
-      {% if user.is_authenticated %}
-        {% if user.is_staff %}
-          <a href="{% url 'admin:index' %}" class="admin-btn">Administración</a>
-        {% endif %}
-        
-        <a href="{% url 'carrito:detalle' %}">🛒 Carrito</a>
+    {% if user.is_authenticated %}
+      {% if user.is_staff %}<a href="{% url 'admin:index' %}" class="admin-btn">Administración</a>{% endif %}
+      <a href="{% url 'carrito:detalle' %}" aria-label="Ver carrito">🛒 Carrito</a>
 
-        <div class="user-menu">
-          <div class="user-menu-container">
-            {% if user.perfil.foto %}
-              <img src="{{ user.perfil.foto.url }}" alt="Foto de perfil" class="user-avatar">
-            {% else %}
-              <div class="avatar-placeholder">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="var(--blanco)">
-                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                </svg>
-              </div>
-            {% endif %}
-            <span>{{ user.username }}</span>
-          </div>
-          <div class="dropdown-content">
-            <a href="{% url 'usuarios:editar_perfil' %}" class="dropdown-item">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+      <div class="user-menu">
+        <div class="user-menu-container" aria-haspopup="true" aria-expanded="false">
+          {% if user.perfil.foto %}
+            <img src="{{ user.perfil.foto.url }}" alt="Foto de perfil" class="user-avatar" loading="lazy">
+          {% else %}
+            <div class="avatar-placeholder" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="var(--blanco)">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
               </svg>
-              Editar perfil
-            </a>
-            <form method="post" action="{% url 'logout' %}">
-              {% csrf_token %}
-              <button type="submit" class="dropdown-item">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
-                </svg>
-                Cerrar sesión
-              </button>
-            </form>
+            </div>
+          {% endif %}
+          <span>{{ user.username }}</span>
+        </div>
+        <div class="dropdown-content" role="menu">
+          <a href="{% url 'usuarios:editar_perfil' %}" class="dropdown-item" role="menuitem">Editar perfil</a>
+          <form method="post" action="{% url 'logout' %}">{% csrf_token %}
+            <button type="submit" class="dropdown-item" role="menuitem">Cerrar sesión</button>
+          </form>
+        </div>
+      </div>
+
+    {% else %}
+      <a href="{% url 'login' %}" aria-label="Iniciar sesión">Iniciar Sesión</a>
+    {% endif %}
+  </nav>
+</header>
+
+<main role="main">
+  {% if messages %}
+    <div class="messages" role="status">
+      {% for message in messages %}{{ message }}{% endfor %}
+    </div>
+  {% endif %}
+
+  {% block content %}
+  <!-- Banner hero con LCP optimizado y WebP adaptativo -->
+  <section class="hero-banner" role="region" aria-label="Banner principal">
+    <div class="particles" id="particles-container"></div>
+    
+    <picture>
+      <source srcset="
+        https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=480&q=80&fm=webp 480w,
+        https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=768&q=80&fm=webp 768w,
+        https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1024&q=80&fm=webp 1024w,
+        https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80&fm=webp 1920w
+      "
+      sizes="(max-width: 576px) 100vw,
+             (max-width: 768px) 100vw,
+             (max-width: 1200px) 100vw,
+             1200px"
+      type="image/webp">
+      <img 
+        src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=768&q=80&fm=webp" 
+        alt="Bicicletas recorriendo México"
+        style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border-radius:16px; z-index:0;"
+        loading="eager"
+        fetchpriority="high"
+      >
+    </picture>
+    <div class="hero-overlay"></div>
+    <div class="hero-contenido">
+      <h1>¡Explora México en Bicicleta!</h1>
+      <p>Únete a nuestras aventuras y recorre los mejores paisajes en dos ruedas.</p>
+      <a href="{% url 'recorridos:lista' %}" class="btn-hero">Ver Recorridos</a>
+    </div>
+  </section>
+
+  <!-- Sección de características -->
+  <section class="features-section">
+    <h2 class="section-title">¿Por qué elegirnos?</h2>
+    
+    <div class="features-grid">
+      <div class="feature-card">
+        <span class="feature-icon">🚵‍♂️</span>
+        <h3 class="feature-title">Rutas Exclusivas</h3>
+        <p class="feature-desc">Descubre los mejores caminos y senderos que solo los locales conocen, seleccionados cuidadosamente por nuestros expertos.</p>
+      </div>
+      
+      <div class="feature-card">
+        <span class="feature-icon">👥</span>
+        <h3 class="feature-title">Comunidad Activa</h3>
+        <p class="feature-desc">Únete a más de 5,000 ciclistas apasionados que comparten rutas, consejos y experiencias inolvidables.</p>
+      </div>
+      
+      <div class="feature-card">
+        <span class="feature-icon">🛒</span>
+        <h3 class="feature-title">Equipamiento Premium</h3>
+        <p class="feature-desc">Accede a descuentos exclusivos en equipamiento de las mejores marcas y asesoramiento especializado.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sección de próximos eventos -->
+  <section class="events-section">
+    <h2 class="section-title" style="color: var(--blanco);">Próximos Eventos</h2>
+    
+    <div class="events-grid">
+      {% for recorrido in proximos_recorridos|slice:":3" %}
+      <div class="event-card">
+        <span class="event-date">{{ recorrido.fecha|date:"d M Y" }}</span>
+        <h3 class="event-title">{{ recorrido.ciudad }}</h3>
+        <p class="event-desc">{{ recorrido.km }} km - ${{ recorrido.costo }}</p>
+        <a href="{% url 'recorridos:detalle' recorrido.id %}" class="event-link">Más información →</a>
+      </div>
+      {% empty %}
+      <div class="event-card">
+        <span class="event-date">Próximamente</span>
+        <h3 class="event-title">Nuevos Recorridos</h3>
+        <p class="event-desc">Estamos preparando nuevas rutas emocionantes. ¡Mantente atento!</p>
+        <a href="{% url 'recorridos:lista' %}" class="event-link">Ver todos →</a>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Sección de testimonios -->
+  <section class="testimonials-section">
+    <h2 class="section-title">Lo que dicen nuestros ciclistas</h2>
+    
+    <div class="testimonials-container">
+      <div class="testimonial-card">
+        <p class="testimonial-text">He participado en 5 rutas con BikeRoutes MX y cada una supera a la anterior. La organización es impecable y he conocido lugares que nunca hubiera descubierto por mi cuenta.</p>
+        <div class="testimonial-author">
+          <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&q=80" alt="Carlos Mendoza" class="testimonial-avatar">
+          <div>
+            <div class="author-name">Carlos Mendoza</div>
+            <div class="author-role">Ciclista desde 2018</div>
           </div>
         </div>
-
-      {% else %}
-        <a href="{% url 'login' %}">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="var(--blanco)" width="18" height="18">
-            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-          </svg>
-          Iniciar Sesión
-        </a>
-      {% endif %}
-    </nav>
-  </header>
-
-  <main>
-    {% if messages %}
-      <div class="messages">
-        {% for message in messages %}
-          {{ message }}
-        {% endfor %}
       </div>
-    {% endif %}
-
-    {% block content %}
-    <section class="hero-banner">
-      <div class="hero-overlay"></div>
-      <div class="hero-contenido">
-        <h1>¡Explora México en Bicicleta!</h1>
-        <p>Únete a nuestras aventuras y recorre los mejores paisajes en dos ruedas.</p>
-        <a href="{% url 'recorridos:lista' %}" class="btn-hero">Ver Recorridos</a>
-      </div>
-    </section>
-    {% endblock %}
-  </main>
-
-  <footer class="site-footer">
-    &copy; 2025 BikeRoutes MX — Aventuras sobre ruedas por todo México 🚴‍♀️
-  </footer>
-
-  <script>
-    // JavaScript para manejar el menú desplegable
-    document.addEventListener('DOMContentLoaded', function() {
-      const userMenu = document.querySelector('.user-menu');
       
-      if (userMenu) {
-        const userMenuContainer = userMenu.querySelector('.user-menu-container');
-        
-        userMenuContainer.addEventListener('click', function(e) {
-          e.stopPropagation(); // Evita que el clic se propague
-          userMenu.classList.toggle('active');
-        });
+      <div class="testimonial-card">
+        <p class="testimonial-text">Como ciclista principiante, me sentí apoyado en todo momento. Las rutas están bien señalizadas y los guías están pendientes de todos. ¡Una experiencia increíble!</p>
+        <div class="testimonial-author">
+          <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&q=80" alt="Ana Rodríguez" class="testimonial-avatar">
+          <div>
+            <div class="author-name">Ana Rodríguez</div>
+            <div class="author-role">Ciclista desde 2024</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="testimonial-card">
+        <p class="testimonial-text">La combinación perfecta entre deporte, naturaleza y compañerismo. He hecho amigos para toda la vida en estas rutas. ¡No me pierdo ninguna!</p>
+        <div class="testimonial-author">
+          <img src="https://images.unsplash.com/photo-1552058544-f2b08422138a?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&q=80" alt="Miguel Torres" class="testimonial-avatar">
+          <div>
+            <div class="author-name">Miguel Torres</div>
+            <div class="author-role">Ciclista desde 2019</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  {% endblock %}
+</main>
 
-        // Cierra el menú al hacer clic en cualquier parte del documento
-        document.addEventListener('click', function() {
-          const openMenu = document.querySelector('.user-menu.active');
-          if (openMenu) {
-            openMenu.classList.remove('active');
-          }
-        });
+<footer class="site-footer" role="contentinfo">
+  &copy; 2025 BikeRoutes MX — Aventuras sobre ruedas por todo México 🚴‍♀️
+</footer>
 
-        // Evita que el menú se cierre al hacer clic dentro de él
-        const dropdownContent = userMenu.querySelector('.dropdown-content');
-        if (dropdownContent) {
-          dropdownContent.addEventListener('click', function(e) {
-            e.stopPropagation();
-          });
-        }
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const userMenu = document.querySelector('.user-menu');
+  if(userMenu){
+    const userMenuContainer = userMenu.querySelector('.user-menu-container');
+    userMenuContainer.addEventListener('click', function(e){
+      e.stopPropagation();
+      userMenu.classList.toggle('active');
+      const expanded = userMenuContainer.getAttribute('aria-expanded')==='true';
+      userMenuContainer.setAttribute('aria-expanded', !expanded);
+    });
+    document.addEventListener('click', function(){
+      const openMenu = document.querySelector('.user-menu.active');
+      if(openMenu){
+        openMenu.classList.remove('active');
+        openMenu.querySelector('.user-menu-container').setAttribute('aria-expanded','false');
       }
     });
-  </script>
+    const dropdownContent = userMenu.querySelector('.dropdown-content');
+    if(dropdownContent) dropdownContent.addEventListener('click', function(e){ e.stopPropagation(); });
+  }
+  
+  // Crear partículas animadas
+  function createParticles() {
+    const container = document.getElementById('particles-container');
+    if (!container) return;
+    
+    const particleCount = 20;
+    for (let i = 0; i < particleCount; i++) {
+      const particle = document.createElement('div');
+      particle.classList.add('particle');
+      
+      // Tamaño y posición aleatorios
+      const size = Math.random() * 10 + 5;
+      const posX = Math.random() * 100;
+      const duration = Math.random() * 10 + 10;
+      const delay = Math.random() * 5;
+      
+      particle.style.width = `${size}px`;
+      particle.style.height = `${size}px`;
+      particle.style.left = `${posX}%`;
+      particle.style.animationDuration = `${duration}s`;
+      particle.style.animationDelay = `${delay}s`;
+      
+      container.appendChild(particle);
+    }
+  }
+  
+  createParticles();
+});
+</script>
 
-  {% block extra_js %}{% endblock %}
+{% block extra_js %}{% endblock %}
 </body>
 </html>

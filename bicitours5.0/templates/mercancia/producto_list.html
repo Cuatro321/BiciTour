@@ -5,7 +5,7 @@
 
   <form method="get" class="form-filtro mb-4">
     <div class="filtros-contenedor">
-      <input type="text" name="categoria" placeholder="Categoría" class="form-control" value="{{ request.GET.categoria }}">
+      <input type="text" name="nombre" placeholder="Nombre del producto" class="form-control" value="{{ request.GET.nombre }}">
       <input type="number" step="0.01" name="precio_max" placeholder="Precio máximo" class="form-control" value="{{ request.GET.precio_max }}">
       <select name="disponible" class="form-select">
         <option value="">Todos</option>
@@ -14,6 +14,47 @@
       <button type="submit" class="btn-principal btn-filtrar">Filtrar</button>
     </div>
   </form>
+
+  <!-- Modal para imagen ampliada -->
+  <div id="imagenModal" class="modal-imagen">
+    <span class="cerrar-modal">&times;</span>
+    <img class="contenido-modal" id="imagenAmpliada">
+    <div class="titulo-modal" id="tituloImagen"></div>
+  </div>
+
+  <!-- Modal mejorado para iniciar sesión -->
+  <div id="loginModal" class="modal-sesion">
+    <div class="modal-contenido-sesion">
+      <div class="modal-cabecera">
+        <div class="icono-advertencia">🔒</div>
+        <h3>Iniciar sesión requerido</h3>
+        <span class="cerrar-modal-sesion">&times;</span>
+      </div>
+      <div class="modal-cuerpo">
+        <p>Para agregar productos al carrito de compras, necesitas tener una cuenta e iniciar sesión en nuestro sitio.</p>
+        <div class="beneficios-sesion">
+          <div class="beneficio">
+            <span class="icono-beneficio">🛒</span>
+            <span>Agregar productos al carrito</span>
+          </div>
+          <div class="beneficio">
+            <span class="icono-beneficio">🚚</span>
+            <span>Realizar pedidos rápidamente</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-pie">
+        <a href="{% url 'login' %}?next={{ request.path }}" class="btn-modal btn-modal-principal">
+          <span class="icono-btn">→</span>
+          Iniciar sesión
+        </a>
+        <button class="btn-modal btn-modal-secundario cerrar-login-modal">
+          <span class="icono-btn">←</span>
+          Continuar navegando
+        </button>
+      </div>
+    </div>
+  </div>
 
   <div class="grid-recorridos" aria-label="Catálogo de productos">
     {% for producto in productos %}
@@ -25,7 +66,7 @@
         </div>
 
         {% if producto.imagen %}
-          <img src="{{ producto.imagen.url }}" alt="Imagen de {{ producto.nombre }}" class="img-recorrido">
+          <img src="{{ producto.imagen.url }}" alt="Imagen de {{ producto.nombre }}" class="img-recorrido modal-desencadenador" data-titulo="{{ producto.nombre }}">
         {% else %}
           <div class="img-recorrido sin-imagen" role="img" aria-label="Sin imagen disponible">
             Sin imagen
@@ -43,9 +84,15 @@
 
         <!-- Botón dinámico -->
         {% if producto.disponible %}
-          <a class="btn-principal" href="{% url 'carrito:agregar' producto.id %}" aria-label="Agregar {{ producto.nombre }} al carrito">
-            🛒 Agregar al carrito
-          </a>
+          {% if user.is_authenticated %}
+            <a class="btn-principal" href="{% url 'carrito:agregar' producto.id %}" aria-label="Agregar {{ producto.nombre }} al carrito">
+              🛒 Agregar al carrito
+            </a>
+          {% else %}
+            <button class="btn-principal btn-requiere-login" data-producto="{{ producto.nombre }}">
+              🛒 Agregar al carrito
+            </button>
+          {% endif %}
         {% else %}
           <div class="btn-no-disponible">🚫 No disponible</div>
         {% endif %}
@@ -69,6 +116,14 @@
     --color-borde-card: #b3e0ea;
     --sombra-suave: rgba(1, 160, 153, 0.25);
     --sombra-fuerte: rgba(1, 133, 117, 0.4);
+    --color-modal-fondo: rgba(0, 0, 0, 0.7);
+    --color-modal-contenido: #fff;
+    --color-texto-oscuro: #333;
+    --color-texto-claro: #666;
+    --color-exito: #4CAF50;
+    --color-error: #F44336;
+    --color-advertencia: #FF9800;
+    --color-info: #2196F3;
   }
 
   .titulo-principal {
@@ -170,6 +225,7 @@
     border-bottom: 5px solid var(--color-verde);
     transition: transform 0.3s ease;
     flex-shrink: 0;
+    cursor: zoom-in;
   }
 
   .card-recorrido:hover .img-recorrido {
@@ -232,6 +288,8 @@
     margin-bottom: 25px;
     display: inline-block;
     text-align: center;
+    border: none;
+    cursor: pointer;
   }
 
   .btn-principal:hover {
@@ -292,6 +350,250 @@
     margin-top: 40px;
   }
 
+  /* Estilos para el modal de imagen */
+  .modal-imagen {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    overflow: auto;
+    animation: fadeIn 0.3s;
+  }
+
+  @keyframes fadeIn {
+    from {opacity: 0;}
+    to {opacity: 1;}
+  }
+
+  .contenido-modal {
+    display: block;
+    max-width: 90%;
+    max-height: 80vh;
+    margin: 60px auto;
+    animation: zoomIn 0.3s;
+  }
+
+  @keyframes zoomIn {
+    from {transform: scale(0.8);}
+    to {transform: scale(1);}
+  }
+
+  .titulo-modal {
+    color: white;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+
+  .cerrar-modal {
+    position: absolute;
+    top: 20px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    transition: 0.3s;
+    cursor: pointer;
+  }
+
+  .cerrar-modal:hover,
+  .cerrar-modal:focus {
+    color: var(--color-verde);
+    text-decoration: none;
+  }
+
+  .modal-desencadenador {
+    cursor: zoom-in;
+  }
+
+  /* Estilos mejorados para el modal de sesión */
+  .modal-sesion {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--color-modal-fondo);
+    overflow: hidden;
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .modal-contenido-sesion {
+    position: relative;
+    background: linear-gradient(135deg, var(--color-blanco) 0%, #f8f9fa 100%);
+    margin: 10% auto;
+    border-radius: 24px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3), 0 15px 35px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    animation: slideIn 0.4s ease-out;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-50px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .modal-cabecera {
+    display: flex;
+    align-items: center;
+    padding: 25px 30px 15px;
+    background: linear-gradient(135deg, var(--color-verde) 0%, var(--color-verde-oscuro) 100%);
+    color: white;
+    position: relative;
+  }
+
+  .icono-advertencia {
+    font-size: 2.5rem;
+    margin-right: 15px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+  }
+
+  .modal-cabecera h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    flex: 1;
+  }
+
+  .cerrar-modal-sesion {
+    font-size: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+  }
+
+  .cerrar-modal-sesion:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: rotate(90deg);
+  }
+
+  .modal-cuerpo {
+    padding: 25px 30px;
+  }
+
+  .modal-cuerpo p {
+    color: var(--color-texto-oscuro);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+
+  .beneficios-sesion {
+    background-color: rgba(1, 166, 153, 0.08);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0;
+  }
+
+  .beneficio {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 8px 0;
+  }
+
+  .beneficio:last-child {
+    margin-bottom: 0;
+  }
+
+  .icono-beneficio {
+    font-size: 1.4rem;
+    margin-right: 15px;
+    width: 30px;
+    text-align: center;
+  }
+
+  .beneficio span:last-child {
+    color: var(--color-texto-claro);
+    font-weight: 500;
+  }
+
+  .modal-pie {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    padding: 20px 30px;
+    background-color: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    flex-wrap: wrap;
+  }
+
+  .btn-modal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 1rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    outline: none;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .btn-modal-principal {
+    background: linear-gradient(to right, var(--color-verde), var(--color-verde-oscuro));
+    color: white;
+    box-shadow: 0 4px 15px rgba(1, 166, 153, 0.4);
+  }
+
+  .btn-modal-principal:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(1, 166, 153, 0.6);
+    background: linear-gradient(to right, var(--color-verde-oscuro), var(--color-verde));
+  }
+
+  .btn-modal-secundario {
+    background: white;
+    color: var(--color-texto-claro);
+    border: 1px solid #dee2e6;
+  }
+
+  .btn-modal-secundario:hover {
+    background-color: #f8f9fa;
+    border-color: #ced4da;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .icono-btn {
+    margin-right: 8px;
+    transition: transform 0.3s ease;
+  }
+
+  .btn-modal-principal:hover .icono-btn {
+    transform: translateX(3px);
+  }
+
+  .btn-modal-secundario:hover .icono-btn {
+    transform: translateX(-3px);
+  }
+
   @media (max-width: 700px) {
     .grid-recorridos {
       grid-template-columns: 1fr;
@@ -330,6 +632,138 @@
       flex: 1 1 auto;
       width: 100%;
     }
+
+    .contenido-modal {
+      max-width: 95%;
+      max-height: 70vh;
+    }
+
+    .cerrar-modal {
+      top: 10px;
+      right: 20px;
+      font-size: 30px;
+    }
+
+    .modal-contenido-sesion {
+      margin: 20% auto;
+      width: 95%;
+    }
+
+    .modal-cabecera {
+      padding: 20px;
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .icono-advertencia {
+      margin-right: 0;
+      margin-bottom: 10px;
+    }
+
+    .modal-cuerpo {
+      padding: 20px;
+    }
+
+    .modal-pie {
+      flex-direction: column;
+      padding: 20px;
+    }
+
+    .btn-modal {
+      width: 100%;
+      justify-content: center;
+    }
   }
 </style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Obtener el modal
+  const modal = document.getElementById("imagenModal");
+  
+  // Obtener la imagen y el elemento para el título dentro del modal
+  const modalImg = document.getElementById("imagenAmpliada");
+  const tituloModal = document.getElementById("tituloImagen");
+  
+  // Obtener todos los elementos que pueden abrir el modal
+  const imagenes = document.querySelectorAll(".modal-desencadenador");
+  
+  // Cuando se hace clic en una imagen, abrir el modal
+  imagenes.forEach(img => {
+    img.onclick = function(){
+      modal.style.display = "block";
+      modalImg.src = this.src;
+      tituloModal.innerHTML = this.getAttribute("data-titulo");
+    }
+  });
+  
+  // Obtener el elemento <span> que cierra el modal
+  const span = document.getElementsByClassName("cerrar-modal")[0];
+  
+  // Cuando se hace clic en <span> (x), cerrar el modal
+  span.onclick = function() {
+    modal.style.display = "none";
+  }
+  
+  // Cuando se hace clic en cualquier lugar fuera de la imagen, cerrar el modal
+  window.onclick = function(event) {
+    if (event.target == modal) {
+      modal.style.display = "none";
+    }
+  }
+  
+  // Cerrar el modal con la tecla ESC
+  document.addEventListener('keydown', function(event) {
+    if (event.key === "Escape" && modal.style.display === "block") {
+      modal.style.display = "none";
+    }
+  });
+
+  // Funcionalidad para el modal de login
+  const loginModal = document.getElementById("loginModal");
+  const loginButtons = document.querySelectorAll(".btn-requiere-login");
+  const closeLoginModal = document.querySelector(".cerrar-login-modal");
+  const closeLoginModalX = document.querySelector(".cerrar-modal-sesion");
+  
+  // Cuando se hace clic en un botón que requiere login
+  loginButtons.forEach(button => {
+    button.onclick = function() {
+      loginModal.style.display = "block";
+      document.body.style.overflow = 'hidden'; // Prevenir scroll
+    }
+  });
+  
+  // Cerrar el modal de login
+  if (closeLoginModal) {
+    closeLoginModal.onclick = function() {
+      loginModal.style.display = "none";
+      document.body.style.overflow = 'auto'; // Permitir scroll nuevamente
+    }
+  }
+  
+  // Cerrar el modal de login con la X
+  if (closeLoginModalX) {
+    closeLoginModalX.onclick = function() {
+      loginModal.style.display = "none";
+      document.body.style.overflow = 'auto'; // Permitir scroll nuevamente
+    }
+  }
+  
+  // Cerrar el modal de login al hacer clic fuera
+  window.onclick = function(event) {
+    if (event.target == loginModal) {
+      loginModal.style.display = "none";
+      document.body.style.overflow = 'auto'; // Permitir scroll nuevamente
+    }
+  }
+  
+  // Cerrar el modal de login con la tecla ESC
+  document.addEventListener('keydown', function(event) {
+    if (event.key === "Escape" && loginModal.style.display === "block") {
+      loginModal.style.display = "none";
+      document.body.style.overflow = 'auto'; // Permitir scroll nuevamente
+    }
+  });
+</script>
 {% endblock %}

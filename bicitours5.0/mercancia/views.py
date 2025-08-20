@@ -8,12 +8,12 @@ class ProductoListView(ListView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        categoria = self.request.GET.get('categoria')
+        nombre = self.request.GET.get('nombre') 
         disponible = self.request.GET.get('disponible')
         precio_max = self.request.GET.get('precio_max')
 
-        if categoria:
-            queryset = queryset.filter(categoria__icontains=categoria)
+        if nombre:
+            queryset = queryset.filter(nombre__icontains=nombre)
         if disponible == '1':
             queryset = queryset.filter(disponible=True)
         if precio_max:

@@ -1,7 +1,14 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
   <div class="envoltura-detalle">
+    <!-- Migas de pan -->
+    <nav class="breadcrumbs">
+      <a href="{% url 'recorridos:lista' %}">🏠 Recorridos</a>
+      <span>›</span>
+      <span>{{ recorrido.ciudad }}</span>
+    </nav>
 
     <a href="{% url 'recorridos:lista' %}" class="btn-volver">
       ⬅ Volver a Recorridos
@@ -9,17 +16,43 @@
 
     <section class="tarjeta-detalle">
       {% if recorrido.foto %}
-        <img src="{{ recorrido.foto.url }}" alt="Imagen del recorrido" class="img-detalle">
+        <img src="{{ recorrido.foto.url }}" 
+             alt="Imagen del recorrido" 
+             class="img-detalle" 
+             loading="eager"
+             width="960"
+             height="380">
       {% endif %}
 
       <div class="contenido-detalle">
-        <h2>{{ recorrido.ciudad }}</h2>
+        <h2>
+          {{ recorrido.ciudad }}
+          {% if recorrido.realizado %}
+            <span class="badge badge-cerrado">Finalizado</span>
+          {% else %}
+            <span class="badge badge-abierto">Disponible</span>
+          {% endif %}
+        </h2>
         <p><strong>📅 Fecha:</strong> {{ recorrido.fecha|date:"d M Y" }}</p>
         <p><strong>📍 Distancia:</strong> {{ recorrido.km }} km</p>
         <p><strong>💲 Costo:</strong> ${{ recorrido.costo }}</p>
         <p><strong>📝 Descripción:</strong></p>
+
         <h3>🗺️ Mapa de la Ruta</h3>
-        <div id="map" style="height: 400px; margin-top: 20px; border-radius: 10px; overflow: hidden;"></div>
+        <div class="map-container">
+          <div id="map" style="height: 400px; margin-top: 20px; border-radius: 10px; overflow: hidden;"></div>
+          <div class="map-controls">
+            <button id="restart-animation" class="control-btn" title="Reiniciar animación">
+              🔄
+              <span class="tooltip">Reiniciar</span>
+            </button>
+            <button id="skip-animation" class="control-btn" title="Omitir animación">
+              ⏭️
+              <span class="tooltip">Omitir</span>
+            </button>
+          </div>
+        </div>
+
         <p class="descripcion">{{ recorrido.descripcion }}</p>
 
         <h3>👥 Inscripciones ({{ inscritos.count }})</h3>
@@ -31,17 +64,48 @@
           {% endfor %}
         </ul>
 
-        <a class="btn-principal" href="{% url 'inscripciones:nueva' %}?recorrido={{ recorrido.id }}">
-          📝 Pre‑inscribirse
-        </a>
+        {% if not recorrido.realizado %}
+          <a class="btn-principal" href="{% url 'inscripciones:nueva' %}?recorrido={{ recorrido.id }}">
+            📝 Pre-inscribirse
+          </a>
+        {% else %}
+          <p class="btn-principal" style="pointer-events: none;cursor: not-allowed;">
+            🚫 Ya no es posible recibir registros
+          </p>
+        {% endif %}
+
       </div>
     </section>
-
   </div>
+
+  <!-- Botón flotante para volver arriba -->
+  <button class="floating-btn floating-to-top" title="Volver arriba" style="display: none;">
+    <span>↑</span>
+  </button>
 {% endblock %}
 
 {% block extra_style %}
+<!-- CSS de Leaflet -->
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+  crossorigin="anonymous">
+
 <style>
+  :root {
+    --color-azul: #01708b;
+    --color-verde: #01a699;
+    --color-verde-oscuro: #018575;
+    --color-gris-claro: #f9f9f9;
+    --color-gris-medio: #ddd;
+    --color-gris-oscuro: #555;
+    --color-blanco: #fff;
+    --color-borde-card: #b3e0ea;
+    --sombra-suave: rgba(1, 160, 153, 0.25);
+    --sombra-fuerte: rgba(1, 133, 117, 0.4);
+  }
+
   .envoltura-detalle {
     width: 100%;
     padding: 40px 20px;
@@ -51,6 +115,31 @@
     align-items: center;
   }
 
+  /* Migas de pan */
+  .breadcrumbs {
+    width: 100%;
+    max-width: 960px;
+    margin-bottom: 20px;
+    font-size: 0.95rem;
+    color: var(--color-gris-oscuro);
+  }
+
+  .breadcrumbs a {
+    text-decoration: none;
+    color: var(--color-azul);
+    font-weight: 600;
+  }
+
+  .breadcrumbs span {
+    margin: 0 6px;
+    color: var(--color-gris-oscuro);
+  }
+
+  .map-container {
+    position: relative;
+    width: 100%;
+  }
+
   #map {
     width: 100%;
     height: 420px;
@@ -58,6 +147,73 @@
     margin-top: 10px;
     border: 3px solid var(--color-borde-card);
     box-shadow: 0 12px 32px var(--sombra-suave);
+  }
+
+  .map-controls {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 1000;
+  }
+
+  .control-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: white;
+    border: 2px solid #ddd;
+    cursor: pointer;
+    font-size: 18px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .control-btn:hover {
+    background-color: var(--color-verde);
+    color: white;
+    transform: scale(1.1);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.2);
+  }
+
+  .control-btn:hover .tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(-8px);
+  }
+
+  .control-btn .tooltip {
+    position: absolute;
+    top: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    pointer-events: none;
+  }
+
+  .control-btn .tooltip::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px 5px 0 5px;
+    border-style: solid;
+    border-color: #333 transparent transparent transparent;
   }
 
   .btn-volver {
@@ -111,6 +267,30 @@
     font-weight: 900;
     color: var(--color-azul);
     margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* Badge de estado */
+  .badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .badge-abierto {
+    background-color: #d4f6ef;
+    color: var(--color-verde-oscuro);
+    border: 1px solid var(--color-verde);
+  }
+  .badge-cerrado {
+    background-color: #ffe0e0;
+    color: #c62828;
+    border: 1px solid #e57373;
   }
 
   .contenido-detalle p {
@@ -164,6 +344,38 @@
     box-shadow: 0 14px 42px rgba(1,133,117,0.6);
   }
 
+  /* Estilos para botón flotante */
+  .floating-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    font-size: 24px;
+    font-weight: bold;
+    z-index: 999;
+    background-color: var(--color-verde);
+    color: var(--color-blanco);
+  }
+
+  .floating-btn:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    background-color: var(--color-verde-oscuro);
+  }
+
+  .floating-btn:active {
+    transform: translateY(0) scale(0.98);
+  }
+
   @media (max-width: 768px) {
     .img-detalle {
       height: 240px;
@@ -190,6 +402,344 @@
       font-size: 1rem;
       padding: 10px 22px;
     }
+
+    /* Responsive para botón flotante */
+    .floating-btn {
+      width: 50px;
+      height: 50px;
+      font-size: 20px;
+      bottom: 20px;
+      right: 20px;
+    }
+
+    .map-controls {
+      top: 15px;
+      right: 15px;
+    }
+
+    .control-btn {
+      width: 36px;
+      height: 36px;
+      font-size: 16px;
+    }
   }
 </style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- JS de Leaflet con defer -->
+<script
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+  crossorigin="anonymous"
+  defer
+></script>
+
+<script>
+// Variables globales para la animación
+let map, animationRequest;
+let animatedPolyline, fullPolyline, cyclistMarker;
+let ruta = [];
+let currentProgress = 0;
+let animationActive = true;
+const ANIMATION_DURATION = 45000; // 45 segundos para toda la animación
+
+// Esperar a que Leaflet esté disponible
+function initMap() {
+  if (typeof L === 'undefined') {
+    setTimeout(initMap, 100);
+    return;
+  }
+
+  // Obtener la ruta desde Django
+  try {
+    ruta = {{ recorrido.ruta|safe }};
+  } catch (e) {
+    console.error("Error al obtener la ruta:", e);
+    ruta = [];
+  }
+
+  // Crear el mapa
+  map = L.map("map").setView(ruta && ruta.length > 0 ? ruta[0] : [19.4326, -99.1332], 14);
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  }).addTo(map);
+
+  if (ruta && ruta.length > 0) {
+    // Crear la polilínea completa (gris tenue)
+    fullPolyline = L.polyline(ruta, {
+      color: '#aaa',
+      weight: 4,
+      opacity: 0.4,
+      dashArray: '5, 10'
+    }).addTo(map);
+
+    // Crear la polilínea animada
+    animatedPolyline = L.polyline([], {
+      color: '#2E86C1',
+      weight: 6,
+      opacity: 0.9,
+      lineJoin: 'round'
+    }).addTo(map);
+
+    // Crear marcador del ciclista
+    cyclistMarker = L.marker(ruta[0], {
+      icon: L.divIcon({
+        html: '<div class="cyclist-icon">🚴‍♂️</div>',
+        className: 'cyclist-marker',
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+      }),
+      zIndexOffset: 1000
+    }).addTo(map);
+
+    // Ajustar el mapa al recorrido completo
+    map.fitBounds(fullPolyline.getBounds(), { padding: [50, 50] });
+
+    // Marcadores de inicio y fin
+    L.marker(ruta[0], {
+      icon: L.divIcon({
+        html: '<div class="start-icon">📍<div class="marker-label">Inicio</div></div>',
+        className: 'start-marker',
+        iconSize: [30, 40],
+        iconAnchor: [15, 40]
+      })
+    }).addTo(map)
+      .bindPopup("📍 Inicio: {{ recorrido.punto_inicio|default:'Inicio del recorrido' }}");
+      
+    L.marker(ruta[ruta.length - 1], {
+      icon: L.divIcon({
+        html: '<div class="end-icon">🏁<div class="marker-label">Fin</div></div>',
+        className: 'end-marker',
+        iconSize: [30, 40],
+        iconAnchor: [15, 40]
+      })
+    }).addTo(map)
+      .bindPopup("🏁 Fin: {{ recorrido.punto_fin|default:'Fin del recorrido' }}");
+
+    // Configurar eventos para los botones
+    document.getElementById('restart-animation').addEventListener('click', restartAnimation);
+    document.getElementById('skip-animation').addEventListener('click', skipAnimation);
+
+    // Iniciar la animación automáticamente después de un breve retraso
+    setTimeout(startAnimation, 1000);
+  } else {
+    // Mapa por defecto si no hay ruta
+    L.marker([19.4326, -99.1332]).addTo(map)
+      .bindPopup("📍 {{ recorrido.ciudad }}")
+      .openPopup();
+  }
+
+  // Funcionalidad para el botón de volver arriba
+  const floatingToTop = document.querySelector('.floating-to-top');
+  
+  // Mostrar/ocultar botón según la posición de scroll
+  window.addEventListener('scroll', function() {
+    if (window.scrollY > 300) {
+      floatingToTop.style.display = 'flex';
+    } else {
+      floatingToTop.style.display = 'none';
+    }
+  });
+  
+  // Scroll suave al hacer clic en el botón
+  floatingToTop.addEventListener('click', function() {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  });
+}
+
+// Función para animar el trazado de forma fluida
+function animateRoute(timestamp) {
+  if (!animationActive || !ruta || ruta.length === 0) return;
+  
+  if (!startTime) startTime = timestamp;
+  
+  // Calcular el progreso basado en el tiempo
+  const progress = Math.min(1, (timestamp - startTime) / ANIMATION_DURATION);
+  currentProgress = progress;
+  
+  // Calcular la posición actual en la ruta
+  const totalPoints = ruta.length;
+  const currentPointIndex = Math.floor(progress * (totalPoints - 1));
+  const nextPointIndex = Math.min(currentPointIndex + 1, totalPoints - 1);
+  const segmentProgress = progress * (totalPoints - 1) - currentPointIndex;
+  
+  // Interpolar entre puntos para movimiento suave
+  const currentPoint = ruta[currentPointIndex];
+  const nextPoint = ruta[nextPointIndex];
+  
+  const currentLat = currentPoint[0] + (nextPoint[0] - currentPoint[0]) * segmentProgress;
+  const currentLng = currentPoint[1] + (nextPoint[1] - currentPoint[1]) * segmentProgress;
+  const currentPosition = [currentLat, currentLng];
+  
+  // Actualizar la polilínea animada
+  if (currentPointIndex > 0) {
+    const pointsToShow = ruta.slice(0, currentPointIndex + 1);
+    animatedPolyline.setLatLngs(pointsToShow);
+  }
+  
+  // Mover el marcador del ciclista
+  cyclistMarker.setLatLng(currentPosition);
+  
+  // Mover suavemente la cámara para seguir al ciclista
+  if (progress < 0.95) { // No mover la cámara al final
+    map.panTo(currentPosition, {
+      animate: true,
+      duration: 1,
+      easeLinearity: 0.25
+    });
+  }
+  
+  // Continuar la animación si no ha terminado
+  if (progress < 1) {
+    animationRequest = requestAnimationFrame(animateRoute);
+  } else {
+    // Animación completada - efecto final
+    cyclistMarker.getElement().classList.add('highlight');
+  }
+}
+
+let startTime;
+
+// Iniciar animación
+function startAnimation() {
+  startTime = null;
+  animationActive = true;
+  animationRequest = requestAnimationFrame(animateRoute);
+}
+
+// Detener animación
+function stopAnimation() {
+  animationActive = false;
+  if (animationRequest) {
+    cancelAnimationFrame(animationRequest);
+  }
+}
+
+// Reiniciar animación
+function restartAnimation() {
+  stopAnimation();
+  
+  // Reiniciar progreso
+  currentProgress = 0;
+  
+  // Limpiar la polilínea animada
+  if (animatedPolyline) {
+    animatedPolyline.setLatLngs([]);
+  }
+  
+  // Reposicionar el ciclista al inicio
+  if (cyclistMarker && ruta.length > 0) {
+    cyclistMarker.setLatLng(ruta[0]);
+    cyclistMarker.getElement().classList.remove('highlight');
+  }
+  
+  // Volver a la vista inicial
+  map.fitBounds(fullPolyline.getBounds(), { padding: [50, 50] });
+  
+  // Iniciar animación después de un breve retraso
+  setTimeout(startAnimation, 300);
+}
+
+// Omitir animación y mostrar ruta completa
+function skipAnimation() {
+  stopAnimation();
+  
+  // Mostrar toda la ruta
+  if (animatedPolyline && ruta.length > 0) {
+    animatedPolyline.setLatLngs(ruta);
+  }
+  
+  // Posicionar el ciclista al final
+  if (cyclistMarker && ruta.length > 0) {
+    cyclistMarker.setLatLng(ruta[ruta.length - 1]);
+    cyclistMarker.getElement().classList.add('highlight');
+  }
+  
+  // Ajustar el mapa al recorrido completo
+  if (fullPolyline) {
+    map.fitBounds(fullPolyline.getBounds(), { padding: [50, 50] });
+  }
+}
+
+// Inicializar cuando el DOM esté listo
+document.addEventListener("DOMContentLoaded", function() {
+  setTimeout(initMap, 50);
+});
+
+// Estilos CSS para una animación fluida
+const style = document.createElement('style');
+style.textContent = `
+  .cyclist-marker {
+    background: transparent !important;
+    border: none !important;
+    text-align: center;
+    font-size: 28px;
+    filter: drop-shadow(0px 3px 5px rgba(0,0,0,0.7));
+    z-index: 1000;
+    transition: transform 0.1s ease-out;
+  }
+  
+  .cyclist-marker .cyclist-icon {
+    animation: move 1s infinite alternate ease-in-out;
+    display: block;
+  }
+  
+  .cyclist-marker.highlight .cyclist-icon {
+    animation: celebrate 1s 3;
+  }
+  
+  .start-marker, .end-marker {
+    background: transparent !important;
+    border: none !important;
+    text-align: center;
+    font-size: 22px;
+    filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));
+  }
+  
+  .start-icon, .end-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .marker-label {
+    font-size: 10px;
+    font-weight: bold;
+    color: #333;
+    margin-top: 2px;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 2px 4px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  
+  @keyframes move {
+    0% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-2px) rotate(2deg); }
+    100% { transform: translateY(0px) rotate(0deg); }
+  }
+  
+  @keyframes celebrate {
+    0% { transform: scale(1) rotate(0deg); }
+    25% { transform: scale(1.3) rotate(-10deg); }
+    50% { transform: scale(1.3) rotate(10deg); }
+    75% { transform: scale(1.3) rotate(-10deg); }
+    100% { transform: scale(1) rotate(0deg); }
+  }
+  
+  .leaflet-tooltip {
+    font-weight: bold;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+`;
+document.head.appendChild(style);
+</script>
 {% endblock %}

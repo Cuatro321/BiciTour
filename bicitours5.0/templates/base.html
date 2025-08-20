@@ -3,24 +3,29 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="BikeRoutes MX: Descubre los mejores recorridos en bicicleta por México, inscríbete en eventos, compra en el catálogo y comparte con la comunidad.">
+  <meta name="author" content="BikeRoutes MX">
+  <meta name="keywords" content="bicicleta, recorridos, ciclismo, comunidad, eventos, catálogo, México">
+
   <title>{% block title %}BikeRoutes MX{% endblock %}</title>
   <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primario: #027c8f;
-      --secundario: #00c381;
-      --verde: #01a699;
-      --verde-oscuro: #018575;
+      --primario: #005f6b;
+      --secundario: #009973;
+      --verde: #018575;
+      --verde-oscuro: #015f5f;
       --azul: #01708b;
       --gris-claro: #f5f5f5;
       --gris-medio: #ddd;
-      --gris-oscuro: #2c2c2c;
+      --gris-oscuro: #222222;
       --blanco: #ffffff;
       --sombra: rgba(0, 0, 0, 0.05);
       --menu-bg: #2c3e50;
       --menu-texto: #ecf0f1;
-      --menu-hover: #34495e;
+      --menu-hover: #1f2d3d;
       --admin-color: #d63384;
     }
 
@@ -51,12 +56,17 @@
       display: flex;
       align-items: center;
       gap: 6px;
+      text-decoration: none; /* Asegura que no tenga subrayado */
+      cursor: pointer; /* Cambia el cursor al pasar por encima */
     }
 
     .site-header .logo::before {
       content: "🚴";
       font-size: 1.5rem;
-      margin: 0;
+    }
+
+    .site-header .logo:hover {
+      opacity: 0.9; /* Efecto sutil al pasar el mouse */
     }
 
     .site-header nav {
@@ -74,7 +84,7 @@
       padding: 8px 14px;
       border-radius: 8px;
       transition: all 0.2s ease;
-      background: rgba(255,255,255,0.05);
+      background: rgba(255,255,255,0.1);
     }
 
     .site-header nav a:hover {
@@ -82,7 +92,13 @@
       color: var(--blanco);
     }
 
-    /* Menú de usuario */
+    /* --- ENLACE ACTIVO --- */
+    .site-header nav a.active {
+      background-color: var(--secundario);
+      color: var(--blanco);
+      box-shadow: 0 0 8px rgba(0,0,0,0.3);
+    }
+
     .user-menu {
         position: relative;
         display: inline-block;
@@ -103,7 +119,7 @@
         right: 0;
         background-color: var(--menu-bg);
         min-width: 200px;
-        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.3);
         z-index: 1;
         border-radius: 8px;
         overflow: hidden;
@@ -130,21 +146,10 @@
         cursor: pointer;
     }
 
-    .dropdown-item:last-child {
-        border-bottom: none;
-    }
-
     .dropdown-item:hover {
         background-color: var(--menu-hover);
         color: var(--blanco);
         padding-left: 20px;
-    }
-
-    .dropdown-item svg {
-        margin-right: 10px;
-        width: 16px;
-        height: 16px;
-        vertical-align: middle;
     }
 
     .avatar-placeholder {
@@ -166,7 +171,7 @@
         padding: 8px 14px;
         border-radius: 8px;
         transition: all 0.2s ease;
-        background: rgba(255,255,255,0.05);
+        background: rgba(255,255,255,0.1);
     }
 
     .user-menu-container:hover {
@@ -192,82 +197,6 @@
       width: 100%;
     }
 
-    /* Banner hero */
-    .hero-banner {
-      position: relative;
-      width: 100%;
-      max-width: 1200px;
-      min-height: 70vh;
-      background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      overflow: hidden;
-      margin: 30px auto;
-      border-radius: 16px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-      color: var(--blanco);
-      text-shadow: 0 2px 8px rgba(0,0,0,0.7);
-      padding: 0 30px;
-      box-sizing: border-box;
-    }
-
-    .hero-overlay {
-      position: absolute;
-      inset: 0;
-      background: rgba(1, 103, 134, 0.7);
-      z-index: 1;
-      border-radius: 16px;
-    }
-
-    .hero-contenido {
-      position: relative;
-      max-width: 695px;
-      width: 100%;
-      color: white;
-      text-align: center;
-      z-index: 2;
-    }
-
-    .hero-contenido h1 {
-      font-family: 'Poppins', sans-serif;
-      font-weight: 800;
-      font-size: 3.8rem;
-      margin-bottom: 16px;
-      text-shadow: 2px 2px 6px rgba(0,0,0,0.7);
-      letter-spacing: 0.1em;
-    }
-
-    .hero-contenido p {
-      font-family: 'Poppins', sans-serif;
-      font-weight: 600;
-      font-size: 1.5rem;
-      margin-bottom: 32px;
-      text-shadow: 1px 1px 4px rgba(0,0,0,0.6);
-    }
-
-    .btn-hero {
-      font-family: 'Poppins', sans-serif;
-      background-color: var(--verde);
-      color: var(--blanco);
-      font-weight: 900;
-      font-size: 1.3rem;
-      padding: 16px 56px;
-      border-radius: 40px;
-      text-decoration: none;
-      box-shadow: 0 10px 32px rgba(1,166,153,0.6);
-      transition: background-color 0.3s ease, box-shadow 0.3s ease;
-      display: inline-block;
-    }
-
-    .btn-hero:hover,
-    .btn-hero:focus {
-      background-color: var(--verde-oscuro);
-      box-shadow: 0 14px 48px rgba(1,133,117,0.8);
-      outline: none;
-    }
-
-    /* Mensajes flash */
     .messages {
       max-width: 900px;
       margin: 20px auto;
@@ -280,98 +209,47 @@
     }
 
     @media (max-width: 992px) {
-      .hero-contenido h1 {
-        font-size: 2.8rem;
-      }
-      .hero-contenido p {
-        font-size: 1.2rem;
-        margin-bottom: 24px;
-      }
-      .btn-hero {
-        font-size: 1.1rem;
-        padding: 14px 48px;
-      }
+      .site-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+      .site-header nav { width: 100%; justify-content: flex-start; gap: 12px; }
+      .site-header .logo { font-size: 1.6rem; }
+      .dropdown-content { right: auto; left: 0; }
     }
 
-    @media (max-width: 768px) {
-      .site-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-      }
-
-      .site-header nav {
-        width: 100%;
-        justify-content: flex-start;
-        gap: 12px;
-      }
-
-      .site-header .logo {
-        font-size: 1.6rem;
-      }
-
-      .dropdown-content {
-          right: auto;
-          left: 0;
-      }
-    }
-
-    @media (max-width: 576px) {
-      .hero-banner {
-        min-height: 50vh;
-        padding: 0 15px;
-      }
-      .hero-contenido h1 {
-        font-size: 2rem;
-      }
-      .hero-contenido p {
-        font-size: 1rem;
-        margin-bottom: 18px;
-      }
-      .btn-hero {
-        font-size: 1rem;
-        padding: 12px 36px;
-      }
-    }
-      .admin-btn {
+    .admin-btn {
       background-color: var(--admin-color);
       color: var(--blanco);
     }
+    .admin-btn:hover { background-color: #a52d6b; color: var(--blanco); }
 
-    .admin-btn:hover {
-      background-color: #a52d6b;
-      color: var(--blanco);
-    }
-
-    
   </style>
 
   {% block extra_style %}{% endblock %}
 </head>
 <body>
 
-  <header class="site-header">
-    <div class="logo">BikeRoutes MX</div>
-    <nav>
-      <a href="{% url 'home' %}">Inicio</a>
-      <a href="{% url 'recorridos:lista' %}">Recorridos</a>
-      <a href="{% url 'inscripciones:nueva' %}">Inscripción</a>
-      <a href="{% url 'mercancia:lista' %}">Catálogo</a>
-      <a href="{% url 'comunidad:lista_publicaciones' %}">Comunidad</a>
+  <header class="site-header" role="banner">
+    <!-- Logo convertido en enlace a inicio -->
+    <a href="{% url 'home' %}" class="logo">BikeRoutes MX</a>
+    <nav role="navigation" aria-label="Menú principal">
+      <a href="{% url 'home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">Inicio</a>
+      <a href="{% url 'recorridos:lista' %}" class="{% if request.resolver_match.namespace == 'recorridos' %}active{% endif %}">Recorridos</a>
+      <a href="{% url 'inscripciones:nueva' %}" class="{% if request.resolver_match.namespace == 'inscripciones' %}active{% endif %}">Inscripción</a>
+      <a href="{% url 'mercancia:lista' %}" class="{% if request.resolver_match.namespace == 'mercancia' %}active{% endif %}">Catálogo</a>
+      <a href="{% url 'comunidad:lista_publicaciones' %}" class="{% if request.resolver_match.namespace == 'comunidad' %}active{% endif %}">Comunidad</a>
 
       {% if user.is_authenticated %}
         {% if user.is_staff %}
-          <a href="{% url 'admin:index' %}" class="admin-btn">Administración</a>
+          <a href="{% url 'admin:index' %}" class="admin-btn {% if request.resolver_match.namespace == 'admin' %}active{% endif %}">Administración</a>
         {% endif %}
-        
-        <a href="{% url 'carrito:detalle' %}">🛒 Carrito</a>
+
+        <a href="{% url 'carrito:detalle' %}" aria-label="Ver carrito" class="{% if request.resolver_match.namespace == 'carrito' %}active{% endif %}">🛒 Carrito</a>
 
         <div class="user-menu">
-          <div class="user-menu-container">
+          <div class="user-menu-container" aria-haspopup="true" aria-expanded="false">
             {% if user.perfil.foto %}
               <img src="{{ user.perfil.foto.url }}" alt="Foto de perfil" class="user-avatar">
             {% else %}
-              <div class="avatar-placeholder">
+              <div class="avatar-placeholder" aria-hidden="true">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="var(--blanco)">
                   <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                 </svg>
@@ -379,143 +257,66 @@
             {% endif %}
             <span>{{ user.username }}</span>
           </div>
-          <div class="dropdown-content">
-            <a href="{% url 'usuarios:editar_perfil' %}" class="dropdown-item">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-              </svg>
+          <div class="dropdown-content" role="menu">
+            <a href="{% url 'usuarios:editar_perfil' %}" class="dropdown-item" role="menuitem">
               Editar perfil
             </a>
             <form method="post" action="{% url 'logout' %}">
               {% csrf_token %}
-              <button type="submit" class="dropdown-item">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
-                </svg>
-                Cerrar sesión
-              </button>
+              <button type="submit" class="dropdown-item" role="menuitem">Cerrar sesión</button>
             </form>
           </div>
         </div>
 
       {% else %}
-        <a href="{% url 'login' %}">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="var(--blanco)" width="18" height="18">
-            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-          </svg>
+        <a href="{% url 'login' %}" aria-label="Iniciar sesión" class="{% if request.resolver_match.url_name == 'login' %}active{% endif %}">
           Iniciar Sesión
         </a>
       {% endif %}
     </nav>
   </header>
 
-  <main>
+  <main role="main">
+
     {% if messages %}
-      <div class="messages">
+      <div class="messages" role="status">
         {% for message in messages %}
           {{ message }}
         {% endfor %}
       </div>
     {% endif %}
 
-    {% block content %}
-    <section class="hero-banner">
-      <div class="hero-overlay"></div>
-      <div class="hero-contenido">
-        <h1>¡Explora México en Bicicleta!</h1>
-        <p>Únete a nuestras aventuras y recorre los mejores paisajes en dos ruedas.</p>
-        <a href="{% url 'recorridos:lista' %}" class="btn-hero">Ver Recorridos</a>
-      </div>
-    </section>
-    {% endblock %}
+    {% block content %}{% endblock %}
   </main>
 
-  <footer class="site-footer">
+  <footer class="site-footer" role="contentinfo">
     &copy; 2025 BikeRoutes MX — Aventuras sobre ruedas por todo México 🚴‍♀️
   </footer>
 
   <script>
-    // JavaScript para manejar el menú desplegable
     document.addEventListener('DOMContentLoaded', function() {
       const userMenu = document.querySelector('.user-menu');
-      
       if (userMenu) {
         const userMenuContainer = userMenu.querySelector('.user-menu-container');
-        
         userMenuContainer.addEventListener('click', function(e) {
-          e.stopPropagation(); // Evita que el clic se propague
+          e.stopPropagation();
           userMenu.classList.toggle('active');
+          const expanded = userMenuContainer.getAttribute('aria-expanded') === 'true';
+          userMenuContainer.setAttribute('aria-expanded', !expanded);
         });
-
-        // Cierra el menú al hacer clic en cualquier parte del documento
         document.addEventListener('click', function() {
           const openMenu = document.querySelector('.user-menu.active');
           if (openMenu) {
             openMenu.classList.remove('active');
+            openMenu.querySelector('.user-menu-container').setAttribute('aria-expanded', 'false');
           }
         });
-
-        // Evita que el menú se cierre al hacer clic dentro de él
         const dropdownContent = userMenu.querySelector('.dropdown-content');
-        if (dropdownContent) {
-          dropdownContent.addEventListener('click', function(e) {
-            e.stopPropagation();
-          });
-        }
+        if (dropdownContent) dropdownContent.addEventListener('click', function(e){ e.stopPropagation(); });
       }
     });
   </script>
 
-  {% block extra_js %}
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const mapEl = document.getElementById('map');
-    if (!mapEl) return;
-
-    const ruta = JSON.parse('{{ ruta|default:"[]"|escapejs }}');
-    const tieneRuta = Array.isArray(ruta) && ruta.length > 0;
-
-    const defaultCenter = [19.4326, -99.1332];
-    const map = L.map('map').setView(tieneRuta ? ruta[0] : defaultCenter, tieneRuta ? 14 : 12);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
-
-    if (tieneRuta) {
-      const polyline = L.polyline(ruta, { color: 'blue', weight: 5 }).addTo(map);
-      map.fitBounds(polyline.getBounds(), { padding: [20, 20] });
-
-      // 📍 Inicio (verde)
-      L.marker(ruta[0], { title: "Inicio", icon: L.icon({
-        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
-        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        shadowSize: [41, 41]
-      })}).addTo(map).bindPopup("Inicio del recorrido 🟢");
-
-      // 📍 Fin (rojo)
-      if (ruta.length > 1) {
-        L.marker(ruta[ruta.length - 1], { title: "Fin", icon: L.icon({
-          iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
-          shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-          iconSize: [25, 41],
-          iconAnchor: [12, 41],
-          popupAnchor: [1, -34],
-          shadowSize: [41, 41]
-        })}).addTo(map).bindPopup("Final del recorrido 🏁");
-      }
-    } else {
-      L.marker(defaultCenter).addTo(map).bindPopup("Ruta no disponible");
-    }
-  });
-</script>
-{% endblock %}
-
+  {% block extra_js %}{% endblock %}
 </body>
 </html>
